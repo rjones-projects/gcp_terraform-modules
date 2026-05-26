@@ -1,0 +1,53 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+iam_service_account:
+  source:
+    version: v1.0.4
+  spec: 
+    - name: "test-sa"
+      iam_project_roles:
+        "project_id": 
+          - "roles/cloudbuild.builds.editor"
+          - "roles/iam.serviceAccountUser"
+
+cloud_scheduler:
+  source:
+    version: v1.0.0
+  depends_on:
+    - iam_service_account
+  spec:
+    - name: "test-schedule1"
+      description: "A test schedule"
+      schedule: "0 2 * * 0"
+      time_zone: "UTC"
+      http_target:
+        http_method: "POST"
+        uri: "https:test-uri"
+        body: | 
+          {
+           "name": "test name here"
+          }
+        auth_type: "oauth"
+        service_account_email: "test-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com" 
+      retry_config: 
+        retry_count: 3
+        min_backoff_duration: "PT1S"
+        max_backoff_duration: "PT10S"
+        max_doublings: 5
+    
+    - name: "test-schedule2"
+      description: "A test schedule"
+      schedule: "0 2 * * 0"
+      time_zone: "UTC"
+      http_target:
+        http_method: "GET"
+        uri: "https:test-uri"
+        auth_type: "oidc"
+        service_account_email: "test-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com" 
+    

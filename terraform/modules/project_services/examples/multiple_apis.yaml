@@ -1,0 +1,19 @@
+project_id: "project_id"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+project_services:
+  source:
+    version: v1.0.6
+  depends_on: []
+  spec:
+    - name: "service"
+      service_list:
+        - "sourcerepo.googleapis.com"
+        - "secretmanager.googleapis.com"
+      service_config: 
+        disable_on_destroy: false
+        disable_dependent_services: false

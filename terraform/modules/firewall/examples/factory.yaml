@@ -1,0 +1,47 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "main-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-central2"
+
+firewall:
+  source:
+    version: v1.0.3
+  depends_on:
+    - network
+  spec:
+    - network: "main-vpc"
+      default_rules_config:
+        disabled: true
+      factories_config:
+        rules_folder: "configs/firewall/rules"
+        cidr_tpl_file: "configs/firewall/cidrs.yaml"
+      named_ranges:
+        healthchecks:
+          - "35.191.0.0/16"
+          - "130.211.0.0/22"
+          - "209.85.152.0/22"
+          - "209.85.204.0/22"

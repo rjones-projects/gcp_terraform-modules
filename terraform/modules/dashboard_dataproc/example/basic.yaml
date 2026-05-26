@@ -1,0 +1,28 @@
+project_id: "project_id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+project_services:
+  source:
+    version: v1.0.3
+  spec:
+    - name: "monitoring"
+      service_list:
+        - "monitoring.googleapis.com"
+      service_config:
+        disable_on_destroy: false
+        disable_dependent_services: false
+
+dashboard_dataproc:
+  source:
+    version: v1.0.4
+  depends_on:
+    - project_services
+  spec:
+    enable_dataproc_dashboard: true
+    composer_env_name: "my-env"
+    dashboard_display_name: "My Dashboard"

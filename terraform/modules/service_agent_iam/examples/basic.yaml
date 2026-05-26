@@ -1,0 +1,53 @@
+project_id: "vf-gned-ngdi-pltfrm-alpha-ing"
+region: "europe-west3"
+env: "alpha"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+# 1. Enable the required APIs first
+project_services:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - name: "enable-apis"
+      service_list:
+        - "storage.googleapis.com"
+        - "pubsub.googleapis.com"
+        - "eventarc.googleapis.com"
+        - "bigquery.googleapis.com"
+      service_config: 
+        disable_on_destroy: false
+        disable_dependent_services: false
+
+# 2. Provision Service Agents and assign them IAM roles
+service_agent_iam:
+  source:
+    version: v1.0.0
+  # Wait for APIs to be enabled before creating their service agents
+  depends_on: 
+    - project_services 
+  spec:
+    # Cloud Storage Service Agent
+    - service: "storage.googleapis.com"
+      roles:
+        - "roles/pubsub.publisher"
+        
+    # Eventarc Service Agent
+    - service: "eventarc.googleapis.com"
+      roles:
+        - "roles/eventarc.eventReceiver"
+        - "roles/run.invoker"
+        
+    # Pub/Sub Service Agent
+    - service: "pubsub.googleapis.com"
+      roles:
+        - "roles/iam.serviceAccountTokenCreator"
+
+    # BigQuery Service Agent
+    - service: "bigquery.googleapis.com"
+      roles:
+        - "roles/storage.objectViewer"

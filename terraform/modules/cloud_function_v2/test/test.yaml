@@ -1,0 +1,155 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+
+cloud_function_v2:
+  source:
+    version: v1.0.4
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "function-one"
+      location: "gcp-region" 
+      prefix: "prefix"
+      description: "function description"
+      kms_key: "projects/project_id/locations/region/keyRings/key_ring/cryptoKeys/crypto_key"
+      build_environment_variables:
+        BUILD_CONFIG_TEST: "build_test"
+      build_service_account: "projects/project_id/serviceAccounts/project_number-compute@domain.gserviceaccount.com"
+      service_account_email: "service_account@project_id.iam.gserviceaccount.com"
+      build_worker_pool: "projects/project_id/locations/gcp-region/workerPools/worker_pool"
+      docker_repository_id: "projects/project_id/locations/gcp-region/repositories/docker_repo"
+      bucket_name: "bucket_name"
+      bundle_path: "gs://bucket_name/bundle_name" 
+      bundle_name: "bundle_name"
+      environment_variables:
+        SERVICE_CONFIG_TEST: "config_test"
+      ingress_settings: "ALLOW_ALL"
+      vpc_connector:
+        name: "projects/project_id/locations/gcp-region/connectors/vpc_connector"
+        egress_settings: "ALL_TRAFFIC"
+      secrets: 
+          "TEST_env":
+            is_volume: false
+            secret: "secret"
+            versions:
+              - "latest"
+          "/etc/secrets":
+            is_volume: true
+            secret: "secret"
+            versions: 
+              - "latest:secret"
+      finops_resource_type: "cloud_function"
+      labels: 
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true
+        vf_ngdi_data_layer: "bronze"
+      iam:
+        roles/viewer:
+          special_groups:
+            - "allUsers"
+        roles/run.invoker:
+          groups:
+            - "example-group@googlegroups.com"
+          users:
+            - "user-name@example.com"
+      function_config:
+        entry_point: "entry_point"
+        instance_count: 1
+        memory_mb: 256
+        cpu: "0.166"
+        runtime: "python310"
+        timeout_seconds: 180
+        binary_authorization_policy: null
+      trigger_config:
+        event_type: "event_type"
+        pubsub_topic: "projects/project_id/topics/topic"
+        region: "europe-west2"
+        event_filters:
+        retry_policy: "RETRY_POLICY_DO_NOT_RETRY"
+        trigger_service_account_email: "service_account@project_id.iam.gserviceaccount.com"
+
+    - name: "test2"
+      location: "europe-west2"
+      service_account_email: "cloud-function-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+      bucket_name: "vf-gned-ngdi-alpha-pltfrm-orch-cf"
+      bundle_path: "gs://gcf-v2-sources-923470607715-europe-west2/test2/function-source.zip"
+      
+      finops_resource_type: "cloud_function"
+      labels: 
+        vf_ngdi_environment: "beta"
+        vf_ngdi_shared: true
+        vf_ngdi_data_layer: "bronze"
+
+      build_worker_pool: "projects/vf-gned-ngdi-alpha-pltfrm-orch/locations/europe-west2/workerPools/private-pool"
+      function_config:
+        binary_authorization_policy: null
+        runtime: "python310"
+        entry_point: "entry_func"
+        memory_mb: 512
+        cpu: "333m"
+        instance_count: 100
+        timeout_seconds: 300
+      
+      trigger_config: 
+        event_type: "google.cloud.storage.object.v1.finalized"
+        region: europe_west2
+        event_filters: 
+          - attribute: "bucket"
+            value: "vf-gned-ngdi-alpha-pltfrm-orch-data-contracts"
+        trigger_service_account_email: "cloud-function-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+        retry_policy: "RETRY_POLICY_DO_NOT_RETRY"
+      
+      ingress_settings : "ALLOW_INTERNAL_ONLY"
+
+      vpc_connector : 
+        name            : "projects/vf-gned-ngdi-alpha-pltfrm-orch/locations/europe-west2/connectors/ngdi-connector"
+        create          : false
+        egress_settings : "ALL_TRAFFIC"
+    
+    - name: "test3"
+      location: "europe-west2" 
+      service_account_email: "cloud-function-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+      bucket_name: "vf-gned-ngdi-alpha-pltfrm-orch-upm-cf"
+      bundle_path: "gs://vf-gned-ngdi-alpha-pltfrm-orch-upm-cf/test3/function-source.zip"
+      
+      finops_resource_type: "cloud_function"
+      labels:
+        vf_ngdi_environment: "beta"
+        vf_ngdi_shared: true
+        vf_ngdi_data_layer: "bronze"
+
+      build_worker_pool: "projects/vf-gned-ngdi-alpha-pltfrm-orch/locations/europe-west2/workerPools/private-pool"
+      function_config: 
+        binary_authorization_policy: null
+        runtime: "python310"
+        entry_point: "entry_func"
+        memory_mb: 512
+        cpu: "333m"
+        instance_count: 100
+        timeout_seconds: 300
+      
+      trigger_config: 
+        event_type: "google.cloud.pubsub.topic.v1.messagePublished"
+        pubsub_topic: "projects/vf-gned-ngdi-alpha-pltfrm-orch/topics/vf-gned-ngdi-alpha-pltfrm-orch-upm-dh-gcs-event-topic"
+        trigger_service_account_email: "cloud-function-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+        retry_policy: "RETRY_POLICY_DO_NOT_RETRY"
+      
+      ingress_settings : "ALLOW_INTERNAL_ONLY"
+
+      vpc_connector : 
+        name            : "projects/vf-gned-ngdi-alpha-pltfrm-orch/locations/europe-west2/connectors/ngdi-connector"
+        create          : false
+        egress_settings : "ALL_TRAFFIC"
+
+                

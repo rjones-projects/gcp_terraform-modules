@@ -1,0 +1,84 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+iam_service_account:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec: 
+    - name: "bastion-sa"
+      display_name: "Bastion Host Service Account"
+      iam_bindings:
+        "user:lewis.williamtroy@vodafone.com":
+          - "roles/iam.serviceAccountUser"
+
+project_services:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - name: "service"
+      service_list:
+        - "compute.googleapis.com"
+        - "iap.googleapis.com"
+      service_config: 
+        disable_on_destroy: false
+        disable_dependent_services: false
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "test-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west2"
+      auto_create_subnetworks: false
+      subnets:
+        - name: "private-subnet"
+          ip_cidr_range: "10.0.2.0/24"
+          enable_private_access: true
+          
+bastion_vm:
+  source:
+    version: v1.0.1
+  depends_on:
+    - network
+    - iam_service_account
+    - finops_labels
+  spec:
+    - name: 'test-bastion'
+      zone: "europe-west2-a"
+      machine_type: "e2-small"
+      bastion_image_id: "https://www.googleapis.com/compute/v1/projects/vf-grp-pcs-prd-images-01/global/images/vf-pcs-ubuntu-24-v04-2026-01-25t11-14-25z"
+      disk_size: 50
+      subnetwork: "vf-gned-ngdi-alpha-pltfrm-orch-subnet-private-subnet"
+      network: "test-vpc"
+      sa_email: "bastion-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+      finops_resource_type: "compute"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west2"
+      bastion_ssh_target_firewall_flag: true
+      management_zone_name: "management-zone"
+      management_zone_cidr: "10.0.2.0/24"
+      ssh_authorized_service_accounts:
+        - "bastion-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"

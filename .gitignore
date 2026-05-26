@@ -1,0 +1,3 @@
+terraform/modules/wif/script.sh
+terraform/modules/*/.terraform.lock.hcl
+.github/scripts/deploy/*

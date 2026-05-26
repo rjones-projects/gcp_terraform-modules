@@ -1,0 +1,30 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+iam_service_account:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - name: "github-actions"
+      iam_project_roles:
+        "terraform-test-project":
+          - "roles/iam.serviceAccountTokenCreator"
+
+workload_identity:
+  source:
+    version: 1.0.1
+  depends_on:
+    - iam_service_account
+  spec:
+    - service_account_email: "projects/vf-gned-ngdi-alpha-pltfrm-orch/serviceAccounts/github-actions@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+      github_org: "VFGROUP-NSE-DNOSS"
+      github_repo: "DNE-DE-NGDI-SOURCECODE"
+      pool_id: "github2-pool2"
+      provider_id: "github2-provider2"

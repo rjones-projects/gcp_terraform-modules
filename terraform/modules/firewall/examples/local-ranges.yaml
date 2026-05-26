@@ -1,0 +1,59 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "main-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-central2"
+
+# Source and destination ranges
+#
+# Demonstrates using both source_ranges and destination_ranges
+# in ingress and egress rules for fine-grained traffic control.
+
+firewall:
+  source:
+    version: v1.0.3
+  depends_on:
+    - network
+  spec:
+    - network: "main-vpc"
+      default_rules_config:
+        disabled: true
+      egress_rules:
+        deny-egress-source-destination-ranges:
+          description: "Deny egress using source and destination ranges"
+          source_ranges:
+            - "10.132.0.0/20"
+            - "10.138.0.0/20"
+          destination_ranges:
+            - "172.16.0.0/12"
+      ingress_rules:
+        allow-ingress-source-destination-ranges:
+          description: "Allow ingress using source and destination ranges"
+          source_ranges:
+            - "172.16.0.0/12"
+          destination_ranges:
+            - "10.132.0.0/20"
+            - "10.138.0.0/20"

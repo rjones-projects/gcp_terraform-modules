@@ -1,0 +1,36 @@
+project_id: "your-project-id"
+region: "your-region"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+cloud_build:
+  source:
+    version: v1.0.2
+  spec:
+  - name: "cloud-build-name"
+    location: "europe-west2"
+    connection_config:
+      github_enterprise:
+        host_uri: "https://mmy-ghe-server.net."
+        app_id: "1234567"
+        app_installation_id: "123456789"
+        app_slug: "https://my-ghe-server.net/settings/apps/app-slug"
+        private_key_secret_version: module.secret_manager.version_ids["private-key-secret/v1"]
+        webhook_secret_secret_version: module.secret_manager.version_ids["webhook-secret/v1"]
+    repositories:
+      my-repository:
+        remote_uri: "https://github.com/my-user/my-repo.git"
+        triggers:
+          my-trigger:
+            push:
+              branch: "main"
+            filename: "cloudbuild.yaml"
+    iam:
+      "roles/cloudbuild.connectionViewer": ["member@example.com"]
+  
+
+

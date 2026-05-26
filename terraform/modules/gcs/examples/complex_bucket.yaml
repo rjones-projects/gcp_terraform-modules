@@ -1,0 +1,78 @@
+project_id: "your-project-id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops-lables:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+gcs:
+  source:
+    version: v1.1.5
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "unique-bucket-name"
+      location: "europe-central2"
+      storage_class: "STANDARD"
+      uniform_bucket_level_access: true
+      kms_key_name: "my-kms-key"
+      finops_resource_type: "gcs_bucket"
+      labels:
+        # Required / commonly provided FinOps inputs for gcs_bucket.
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_data_layer: "raw"
+      versioning_enabled: true
+      accesses: 
+      - role: "roles/storage.admin"
+        members: 
+        - "allAuthenticatedUsers"
+      retention_policy:
+        is_locked: true
+        retention_period: 30
+      logging :
+        log_bucket: "log_bucket_name"
+        log_object_prefix: "log_prefix"
+      lifecycle_rule:
+        - action:
+            type: "SetStorageClass"
+            storage_class: "NEARLINE"
+          condition:
+            age: 30
+            with_state: "LIVE"
+            created_before: "2025-01-05"
+            matches_storage_class:
+              - "STANDARD"
+              - "NEARLINE"
+            num_newer_version: 0
+        - action:
+            type: "Delete"
+          condition:
+            age: 365
+      autoclass: true
+      iam_bindings:
+        storage_admin_with_delegated_roles :
+          - members: 
+            - "allAuthenticatedUsers"
+            role: "roles/storage.admin"
+            condition:
+            - expression: "expression_here"
+              title: "title_here"
+              description: "description_here"
+      iam_bindings_additive:
+        "storage_admin_with_delegated_roles" :
+          - member: "allAuthenticatedUsers"
+            role: "roles/storage.admin"
+      objects_to_upload:
+        "object_one":
+          - name: "object_name"
+            source: "source_here"
+            detect_md5hash: "hash_here"

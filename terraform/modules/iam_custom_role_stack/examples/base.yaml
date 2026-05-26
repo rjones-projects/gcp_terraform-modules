@@ -1,0 +1,26 @@
+project_id: "project_id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+iam_custom_role_stack:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - target_project_ids:
+        - "environment-etl"
+        - "environment-dhk"
+        - "environment-ing"
+        - "environment-dh"
+      role_id: "ngdi_platform_admin"
+      title: "NGDI Platform Admin"
+      description: "Custom role for NGDI Terraform deployments"
+      additional_permissions: 
+        - "servicenetworking.services.addPeering"
+        - "servicenetworking.services.deletePeering"
+      members: 
+        - "serviceAccount:sa_name@project_id.iam.gserviceaccount.com"

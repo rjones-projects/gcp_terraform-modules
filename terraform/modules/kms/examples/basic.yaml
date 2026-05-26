@@ -1,0 +1,24 @@
+project_id: "project_id"
+region: "europe-central2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+kms:
+  source:
+    version: v2.0.0
+  depends_on: []
+  spec:
+    - keyring:
+        location: "europe-central2"
+        name: "example-keyring"
+      keys:
+        app-key:
+          rotation_period: "604800s"
+        signing-key:
+          purpose: "ASYMMETRIC_SIGN"
+          version_template:
+            algorithm: "EC_SIGN_P384_SHA384"
+            protection_level: "HSM"

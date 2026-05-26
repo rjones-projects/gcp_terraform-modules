@@ -1,0 +1,125 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+network:
+  source:
+    version: v1.1.1
+  depends_on:
+  spec:
+    - name: "test-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west2"
+      subnets:
+        - name: "private-subnet"
+          ip_cidr_range: "10.0.2.0/24"
+          enable_private_access: true
+          allow_nat: false
+    
+    - name: "test-vpc2"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west2"
+      subnets:
+        - name: "private-subnet"
+          ip_cidr_range: "10.0.2.0/24"
+          enable_private_access: true
+          allow_nat: false
+
+dns:
+  source:
+    version: 1.0.0
+  depends_on: 
+    - network
+  spec:
+    - name: "test1"
+      zone_config:
+        domain: "testingexample.com."
+        private: 
+          client_networks: 
+            - "projects/vf-gned-ngdi-alpha-pltfrm-orch/global/networks/test-vpc"
+      recordsets:
+        "A localhost": 
+          records:
+            - "127.0.0.1"
+        "A myhost":
+          records:
+            - "10.0.0.120"
+          ttl:
+            - 600
+      iam:
+        "roles/dns.admin":
+          - "user:l.troy@reply.com" 
+    
+    - name: "test2"
+      zone_config:
+        domain: "test.example."
+        forwarding:
+          client_networks:
+            - "projects/vf-gned-ngdi-alpha-pltfrm-orch/global/networks/test-vpc"
+          forwarders:
+            "10.0.1.1": null
+            "1.2.3.4": "private"
+    
+    - name: "test3"
+      zone_config:
+        domain: "peering."
+        peering:
+          client_networks:
+            - "projects/vf-gned-ngdi-alpha-pltfrm-orch/global/networks/test-vpc"
+          peer_network: "projects/vf-gned-ngdi-alpha-pltfrm-orch/global/networks/test-vpc2"
+
+    - name: "test4"
+      zone_config:
+        domain: "testing.com."
+        private: 
+          client_networks: 
+            - "projects/vf-gned-ngdi-alpha-pltfrm-orch/global/networks/test-vpc"
+      recordsets:
+        "A regular": 
+          records:
+            - "10.20.0.1"
+        "A geo1":
+          geo_routing:
+            - location: "europe-west1"
+              records:
+                - "10.0.0.1"
+            - location: "europe-west2"
+              records:
+                - "10.0.0.2"
+        "A wrr":
+          ttl: 600
+          wrr_routing:
+            - weight: 0.6
+              records:
+                - "10.10.0.1"
+            - weight: 0.2
+              records:
+                - "10.10.0.2"
+    
+    - name: "test5"
+      zone_config:
+        domain: "0.0.10.in-addr.arpa."
+        private: 
+          client_networks: 
+            - "projects/vf-gned-ngdi-alpha-pltfrm-orch/global/networks/test-vpc"
+      recordsets:
+        "PTR 10.0.0.10.in-addr.arpa":
+          ttl: 300 
+          records:
+            - "test.example.com."
+
+
+    
+    

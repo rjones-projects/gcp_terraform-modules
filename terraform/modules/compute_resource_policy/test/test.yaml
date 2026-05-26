@@ -1,0 +1,42 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+compute_resource_policy:
+  source:
+    version: v1.0.0
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "test-policy"
+      days_in_cycle: 1
+      start_time: "04:00"
+      max_retention_days: 14
+      on_source_disk_delete: "KEEP_AUTO_SNAPSHOTS"
+      finops_resource_type: "compute"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_location: "europe-west2"
+      storage_locations: ["europe-west2"]
+    
+    - name: "test-policy2"
+      days_in_cycle: 1
+      start_time: "04:00"
+      max_retention_days: 14
+      on_source_disk_delete: "KEEP_AUTO_SNAPSHOTS"
+      finops_resource_type: "compute"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_location: "europe-west2"

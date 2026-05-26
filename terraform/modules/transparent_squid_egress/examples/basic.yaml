@@ -1,0 +1,136 @@
+project_id: "project_id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+project_services:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - name: "service"
+      service_list:
+        - "cloudkms.googleapis.com"
+      service_config: 
+        disable_on_destroy: false
+        disable_dependent_services: false
+
+gcs:
+  source:
+    version: v1.1.5
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "unique-bucket-name"
+      location: "europe-west2"
+      finops_resource_type: "gcs_bucket"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_data_layer: "raw"
+      force_destroy: true
+      uniform_bucket_level_access: true
+
+iam_service_account:
+  source:
+    version: v1.0.3
+  depends_on:
+    - gcs
+  spec: 
+    - name: "squid-sa"
+      display_name: "Squid service account"
+      iam_project_roles:
+        "project_id":
+          - "roles/logging.logWriter"
+          - "roles/monitoring.metricWriter"
+      iam_storage_roles:
+        "unique-bucket_name":
+          - "roles/storage.objectViewer"         
+
+kms:
+  source:
+    version: 1.0.3
+  depends_on:
+    - iam_service_account
+  spec:
+    - keyring:
+        location: "europe-west2"
+        name: "keyring-project_id-europe-west2-gcs"
+      keys:
+        cmek-project_id-europe-west2-gcs:
+          rotation_period: "2592000s"
+          labels:
+            env: "dev"
+            owner: "platform"
+          version_template: 
+            algorithm: "GOOGLE_SYMMETRIC_ENCRYPTION"
+            protection_level: "SOFTWARE"
+          iam_bindings:
+            viewer-binding:
+              role: "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+              members:
+                - "serviceAccount:squid-sa@project_id.iam.gserviceaccount.com"
+          
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "vpc-name"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west2"
+      auto_create_subnetworks: false
+      subnets:
+        - name: "private-subnet"
+          ip_cidr_range: "10.0.2.0/24"
+          enable_private_access: true
+    
+transparent_squid_egress:
+  source:
+    version: v1.0.1
+  depends_on:
+    - network
+    - gcs
+    - iam_service_account
+    - project_services
+  spec:
+    - common_resource_id: squid-name
+      zone: "europe-west2-a"
+
+      # Use Ubuntu image family as Centos might be failing or older
+      image_family: "vf-pcs-ubuntu-22"
+      image_project: "vf-grp-pcs-prd-images-01"
+      disk_size: 50
+
+      network_name: vpc-name
+      subnetwork_name: project_id-subnet-private-subnet
+      use_peering_friendly_routes: false
+      enable_blue_green_deployment: true
+      kms_key: "projects/project_id/locations/europe-west2/keyRings/keyring-project_id-europe-west2-gcs/cryptoKeys/cmek-project_id-europe-west2-gcs"
+      sa_email: "squid-sa@project_id.iam.gserviceaccount.com"
+      bucket_name: "unique-bucket_name"
+
+      tls_inspection_bypass:
+        - "docker.io"
+        - "docker.com"
+        - "quay.io"
+        - "helm.sh"
+        - "ubuntu.com"
+        - "gcr.io"
+        - "pkg.dev"
+        - "registry.k8s.io"
+ 

@@ -1,0 +1,26 @@
+project_id: "PROJECT ID"
+region: "europe-west2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+dns:
+  source:
+    version: 1.0.0
+  depends_on: 
+    - network
+  spec:
+    - name: "reverse_lookup_zone"
+      zone_config:
+        domain: "0.0.10.in-addr.arpa."
+        private: 
+          client_networks: 
+            - "projects/PROJECT_ID/global/networks/VPC_NAME"
+      recordsets:
+        "PTR 10.0.0.10.in-addr.arpa":
+          ttl: 300 
+          records:
+            - "test.example.com."

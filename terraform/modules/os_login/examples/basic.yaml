@@ -1,0 +1,14 @@
+project_id: "project_id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+os_login:
+  source:
+    version: v1.0.0
+  depends_on: []
+  spec:
+    - enable_os_login: true

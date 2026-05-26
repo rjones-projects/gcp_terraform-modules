@@ -1,0 +1,169 @@
+{
+  "displayName": "Dataproc – Cluster Operations",
+  "gridLayout": {
+    "columns": 2,
+    "widgets": [
+      {
+        "title": "Dataproc Jobs – Status",
+        "xyChart": {
+          "chartOptions": { "mode": "COLOR" },
+          "yAxis": { "label": "job count", "scale": "LINEAR" },
+          "dataSets": [
+            {
+              "plotType": "STACKED_BAR",
+              "targetAxis": "Y1",
+              "timeSeriesQuery": {
+                "prometheusQuery": "count by (state)(count_over_time({__name__=\"dataproc.googleapis.com/job/state\", monitored_resource=\"cloud_dataproc_job\"}[5m]))"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "title": "Dataproc – YARN Memory",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"dataproc.googleapis.com/cluster/yarn/memory_size\" resource.type=\"cloud_dataproc_cluster\" resource.label.\"cluster_uuid\"=\"d34d9fe9-0a90-4f54-a98e-459268359489\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "crossSeriesReducer": "REDUCE_MEAN",
+                    "groupByFields": ["metric.label.\"status\""],
+                    "alignmentPeriod": "60s"
+                  }
+                }
+              },
+              "plotType": "STACKED_BAR",
+              "targetAxis": "Y1",
+              "minAlignmentPeriod": "60s",
+              "legendTemplate": "${metric.labels.status}"
+            }
+          ],
+          "chartOptions": {
+            "mode": "COLOR",
+            "displayHorizontal": false
+          },
+          "thresholds": [],
+          "yAxis": {
+            "scale": "LINEAR"
+          }
+        }
+      },
+      {
+        "title": "Dataproc – YARN CPU Utilization",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"compute.googleapis.com/instance/cpu/utilization\" resource.type=\"gce_instance\" metadata.user_labels.\"goog-dataproc-cluster-uuid\"=\"d34d9fe9-0a90-4f54-a98e-459268359489\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "crossSeriesReducer": "REDUCE_MEAN",
+                    "groupByFields": ["project"],
+                    "alignmentPeriod": "60s"
+                  }
+                }
+              },
+              "plotType": "STACKED_BAR",
+              "targetAxis": "Y1",
+              "minAlignmentPeriod": "60s",
+              "legendTemplate": "CPU"
+            }
+          ],
+          "chartOptions": {
+            "mode": "COLOR",
+            "displayHorizontal": false
+          },
+          "thresholds": [],
+          "yAxis": {
+            "scale": "LINEAR"
+          }
+        }
+      },
+      {
+        "title": "Dataproc – HDFS Disk Usage",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"dataproc.googleapis.com/cluster/hdfs/storage_capacity\" resource.type=\"cloud_dataproc_cluster\" resource.label.\"cluster_uuid\"=\"d34d9fe9-0a90-4f54-a98e-459268359489\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "crossSeriesReducer": "REDUCE_MEAN",
+                    "groupByFields": ["metric.label.\"status\""],
+                    "alignmentPeriod": "60s"
+                  }
+                }
+              },
+              "plotType": "STACKED_BAR",
+              "targetAxis": "Y1",
+              "minAlignmentPeriod": "60s",
+              "legendTemplate": "${metric.labels.status}"
+            }
+          ],
+          "chartOptions": {
+            "mode": "COLOR",
+            "displayHorizontal": false
+          },
+          "thresholds": [],
+          "yAxis": {
+            "scale": "LINEAR"
+          }
+        }
+      },
+      {
+        "title": "Dataproc – Network Bytes",
+        "xyChart": {
+          "dataSets": [
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"compute.googleapis.com/instance/network/received_bytes_count\" resource.type=\"gce_instance\" metadata.user_labels.\"goog-dataproc-cluster-uuid\"=\"d34d9fe9-0a90-4f54-a98e-459268359489\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM",
+                    "groupByFields": ["project"],
+                    "alignmentPeriod": "60s"
+                  }
+                }
+              },
+              "plotType": "STACKED_BAR",
+              "targetAxis": "Y1",
+              "minAlignmentPeriod": "60s",
+              "legendTemplate": "Incoming"
+            },
+            {
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "metric.type=\"compute.googleapis.com/instance/network/sent_bytes_count\" resource.type=\"gce_instance\" metadata.user_labels.\"goog-dataproc-cluster-uuid\"=\"d34d9fe9-0a90-4f54-a98e-459268359489\"",
+                  "aggregation": {
+                    "perSeriesAligner": "ALIGN_RATE",
+                    "crossSeriesReducer": "REDUCE_SUM",
+                    "groupByFields": ["project"],
+                    "alignmentPeriod": "60s"
+                  }
+                }
+              },
+              "plotType": "STACKED_BAR",
+              "targetAxis": "Y1",
+              "minAlignmentPeriod": "60s",
+              "legendTemplate": "Outgoing"
+            }
+          ],
+          "chartOptions": {
+            "mode": "COLOR",
+            "displayHorizontal": false
+          },
+          "thresholds": [],
+          "yAxis": {
+            "scale": "LINEAR"
+          }
+        }
+      }
+    ]
+  }
+}

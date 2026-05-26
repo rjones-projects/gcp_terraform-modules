@@ -1,0 +1,98 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+project_services:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - name: "service"
+      service_list:
+        - "container.googleapis.com"
+        - "compute.googleapis.com"
+        - "monitoring.googleapis.com"
+        - "dns.googleapis.com"
+        - "logging.googleapis.com"
+      service_config: 
+        disable_on_destroy: false
+        disable_dependent_services: false
+
+kms:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - keyring:
+        location: "europe-west2"
+        name: "GKE-keyring"
+      keys:
+        gke-key:
+          rotation_period: "7776000s"
+          labels:
+            env: "dev"
+            owner: "platform"
+          version_template: 
+            algorithm: "GOOGLE_SYMMETRIC_ENCRYPTION"
+            protection_level: "HSM"
+          iam_bindings:
+            viewer-binding:
+              role: "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+              members:
+                - "serviceAccount:service-452633499172@container-engine-robot.iam.gserviceaccount.com"
+          
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+    - project_services
+  spec:
+    - name: "test-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west2"
+      auto_create_subnetworks: false
+      subnets:
+        - name: "private-subnet"
+          ip_cidr_range: "10.0.2.0/24"
+          enable_private_access: true
+
+gke_autopilot_cluster:
+  source:
+    version: v1.0.0
+  depends_on:
+    - kms
+    - network
+    - project_services
+  spec:
+    - service_name: "test-service"
+      zone: "europe-west2-a"
+      deletion_protection: false
+      kubernetes_version: "1.34.3-gke.1318000"
+      network_name: "test-vpc"
+      subnet_name: "vf-gned-ngdi-alpha-pltfrm-orch-subnet-private-subnet"
+      gke_master_cidr: "172.16.0.0/28"
+      services_cidr: "gke-services"
+      pods_cidr: "gke-pods"
+      management_zone_cidr_range: "10.0.2.0/24"
+      cmek_key_id: "projects/vf-gned-ngdi-alpha-pltfrm-orch/locations/europe-west2/keyRings/GKE-keyring/cryptoKeys/gke-key"
+      finops_resource_type: "compute"
+      labels:
+        vf_cost_item: "ngdi"
+        vf_ngdi_environment: "beta"
+        vf_ngdi_shared: "true"
+      sa_email: "gke-sa@project_id.iam.gserviceaccount.com"

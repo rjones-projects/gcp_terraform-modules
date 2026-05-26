@@ -1,0 +1,61 @@
+project_id: "your-project-id"
+region: "your-region"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+artifact_registry:
+  source:
+    version: v1.0.4
+  spec:
+    - name: "my-new-artifact-repo"
+      format: 
+        docker :
+          standard : 
+            {}
+      location: "europe-west2"
+      encryption_key: "my_kms_key"
+      cleanup_policies:
+        keep-5-versions:
+          action: "KEEP"
+          most_recent_versions: 
+            package_name_prefixes:
+              - "test"
+            keep_count: 5
+        keep-tagged-release:
+          action: "KEEP"
+          condition:
+            tag_state: "TAGGED"
+            tag_prefixes:
+              - "release"
+            package_name_prefixes:
+              - "webapp"
+              - "mobile"
+      cleanup_policy_dry_run: true
+      enable_vulnerability_scanning: true
+      iam: 
+        "roles/artifactregistry.admin" : ["group:cicd@example.com"]
+      iam_bindings:
+        storage_admin_with_delegated_roles :
+          - members: 
+            - "allAuthenticatedUsers"
+            role: "roles/storage.admin"
+            condition:
+            # - expression: "expression_here"
+            #   title: "title_here"
+            #   description: "description_here"
+      iam_bindings_additive:
+        "storage_admin_with_delegated_roles" :
+          - member: "allAuthenticatedUsers"
+            role: "roles/storage.admin"
+            condition:
+            # - expression: "expression_here"
+            #   title: "title_here"
+            #   description: "description_here"
+      labels: 
+        "my_new_label": "my_new_label_value"
+
+

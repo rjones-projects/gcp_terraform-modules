@@ -1,0 +1,57 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec: []
+
+pubsub:
+  source:
+    version: v1.0.2
+  depends_on:
+    - finops_labels
+  spec:
+    - topic_name: "payments-events"
+      finops_resource_type: "pubsub"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_data_layer: "silver"
+        vf_ngdi_shared: "true"
+      subscriptions:
+        - name: "payments-pull"
+          ack_deadline_seconds: 10
+          labels:
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_data_layer: "silver"
+            vf_ngdi_shared: "true"
+        - name: "payments-push"
+          labels:
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_data_layer: "silver"
+            vf_ngdi_shared: "true"
+          push:
+            endpoint: "https://example.com/pubsub/payments"
+
+    - topic_name: "notifications-events"
+      finops_resource_type: "pubsub"
+      labels:
+        vf_ngdi_environment: "beta"
+        vf_ngdi_data_layer: "gold"
+        vf_ngdi_shared: "false"
+      subscriptions:
+        - name: "notifications-dlq-reader"
+          labels:
+            vf_ngdi_environment: "beta"
+            vf_ngdi_data_layer: "gold"
+            vf_ngdi_shared: "false"
+          dead_letter_policy:
+            topic: "projects/your-project-id/topics/notifications-dlq"
+            max_delivery_attempts: 5

@@ -1,0 +1,42 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "main-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-central2"
+
+# Disable SSH default rules
+#
+# Disables the predefined SSH rule by specifying an empty range list.
+# HTTP and HTTPS default rules remain active.
+
+firewall:
+  source: "../modules/firwall"
+  depends_on:
+    - network
+  spec:
+    - network: "main-vpc"
+      default_rules_config:
+        ssh_ranges: []

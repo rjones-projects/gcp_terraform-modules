@@ -1,0 +1,18 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+artifact_registry:
+  source:
+    version: v1.0.4
+  spec:
+    - name: "my-new-artifact-repo"
+      format: 
+        docker :
+          standard : 
+            {}
+      location: "europe-west2"

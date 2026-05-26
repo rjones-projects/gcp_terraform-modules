@@ -1,0 +1,48 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "main-vpc"
+      finops_resource_type: "networking"
+      labels:
+        # Required / commonly provided FinOps inputs for networking resources.
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        # Optional but valid for networking (location marker).
+        vf_ngdi_location: "europe-central2"
+      auto_create_subnetworks: false
+      routing_mode: "REGIONAL"
+      description: "Primary VPC for application stack"
+      subnets:
+        - name: "public-subnet"
+          ip_cidr_range: "10.0.1.0/24"
+          enable_private_access: true
+          flow_logs_config:
+            flow_sampling: 0.5
+            aggregation_interval: "INTERVAL_5_SEC"
+            metadata: "INCLUDE_ALL_METADATA"
+        - name: "private-subnet"
+          ip_cidr_range: "10.0.2.0/24"
+          enable_private_access: true
+          flow_logs_config:
+            flow_sampling: 0.5
+            aggregation_interval: "INTERVAL_5_SEC"
+            metadata: "INCLUDE_ALL_METADATA"

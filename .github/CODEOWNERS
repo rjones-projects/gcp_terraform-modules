@@ -1,0 +1,6 @@
+# ---------------------------------------------------------
+# 1. Global / Default Owners
+# ---------------------------------------------------------
+# Any file modified that doesn't match a rule below will 
+# require a review from the core engineering or project team.
+* @VFGROUP-NSE-DNOSS/dne-externals-ngdi-platform-engineers @VFGROUP-NSE-DNOSS/dne-externals-ngdi-pe-admin

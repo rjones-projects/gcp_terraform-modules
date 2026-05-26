@@ -1,0 +1,103 @@
+name: Release Terraform Modules
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'terraform/modules/**'
+
+permissions:
+  contents: write # Required to push tags
+
+jobs:
+  release-modules:
+    name: Tag and Release
+    # Updated to match ci.yml
+    runs-on: beta-gke-dind-large-runner
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changes and Tag
+        run: |
+          # Detect changed files in the last commit (merge commit)
+          # Note: HEAD~1 HEAD compares the previous commit to current
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          
+          # Filter for modules
+          CHANGED_MODULES=$(echo "$CHANGED_FILES" | grep "^terraform/modules/" | cut -d/ -f1-3 | sort -u)
+
+          if [ -z "$CHANGED_MODULES" ]; then
+            echo "No modules changed in this push."
+            exit 0
+          fi
+
+          echo "Detected changes in: $CHANGED_MODULES"
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          FAILURE=0
+          FAILED_MODULES=""
+
+          for module_path in $CHANGED_MODULES; do
+            module_name=$(basename "$module_path")
+            echo "::group::Processing $module_name"
+            
+            MODULE_HAS_ERROR=0
+            
+            # 1. Check if CHANGELOG was updated in this commit
+            if ! echo "$CHANGED_FILES" | grep -q "$module_path/CHANGELOG.md"; then
+              echo "::error::Release Failed for $module_name: CHANGELOG.md was not updated in this merge!"
+              MODULE_HAS_ERROR=1
+            else
+              echo "✅ CHANGELOG.md update verified."
+            fi
+
+            # 2. Check Version File
+            if [ ! -f "$module_path/VERSION" ]; then
+              echo "::error::Release Failed for $module_name: VERSION file missing!"
+              MODULE_HAS_ERROR=1
+            else
+              VERSION=$(cat "$module_path/VERSION" | tr -d '[:space:]')
+              TAG_NAME="${module_name}-v${VERSION}"
+              echo "Target Tag: $TAG_NAME"
+
+              # 3. Check if Tag exists
+              if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+                echo "::error::Tag $TAG_NAME already exists! You must increment the version in $module_path/VERSION."
+                MODULE_HAS_ERROR=1
+              fi
+            fi
+
+            # 4. Create and Push Tag
+            if [ "$MODULE_HAS_ERROR" -eq "0" ]; then
+              echo "Creating tag $TAG_NAME..."
+              git tag -a "$TAG_NAME" -m "Release $module_name version $VERSION"
+              
+              if git push origin "$TAG_NAME"; then
+                echo "🎉 Successfully released $TAG_NAME"
+              else
+                echo "::error::Failed to push tag $TAG_NAME"
+                MODULE_HAS_ERROR=1
+              fi
+            fi
+
+            if [ "$MODULE_HAS_ERROR" -eq "1" ]; then
+              FAILURE=1
+              FAILED_MODULES="$FAILED_MODULES $module_name"
+            fi
+            
+            echo "::endgroup::"
+          done
+
+          if [ "$FAILURE" -eq "1" ]; then
+            echo "::error::One or more modules failed to release:$FAILED_MODULES"
+            exit 1
+          else
+            echo "All detected modules were released successfully."
+            exit 0
+          fi

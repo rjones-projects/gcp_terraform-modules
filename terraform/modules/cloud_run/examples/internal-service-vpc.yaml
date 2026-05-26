@@ -1,0 +1,42 @@
+project_id: "my-project-id"
+region: "europe-west1"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+project_services:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - name: "cloud-run-required-apis"
+      service_list:
+        - "run.googleapis.com"
+        - "vpcaccess.googleapis.com"
+      service_config:
+        disable_on_destroy: false
+        disable_dependent_services: false
+
+cloud_run:
+  source:
+    version: v1.0.2
+  depends_on:
+    - project_services
+  spec:
+    - name: "internal-api"
+      type: "SERVICE"
+      deletion_protection: false
+      containers:
+        app:
+          image: "europe-west1-docker.pkg.dev/my-project-id/cloud-run-source-deploy/internal-api:latest"
+      service_config:
+        ingress: "INGRESS_TRAFFIC_INTERNAL_ONLY"
+      vpc_connector_create:
+        name: "internal-api-connector"
+        ip_cidr_range: "10.12.0.0/28"
+        network: "projects/my-project-id/global/networks/ngdi-vpc"
+        instances:
+          min: 2
+          max: 3

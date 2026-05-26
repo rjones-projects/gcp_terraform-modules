@@ -1,0 +1,16 @@
+{
+  "include-component-in-tag": true,
+  "include-v-in-tag": true,
+  "separate-pull-requests": true,
+  "tag-separator": "/",
+  "commit-search-depth": 10,
+  "release-search-depth": 10,
+  "pull-request-header": "🤖Automated Terraform Module Release",
+  "packages": {
+    "terraform/modules/gcs": {
+      "release-type": "terraform-module",
+      "component": "gcs"
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}

@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# This script creates and executes an installation script on the VM.
+# This pattern is used to avoid complex escaping issues with shell scripts in Terraform.
+
+cat << 'EOF' > /tmp/install.sh
+#!/bin/bash
+set -e # Exit immediately if a command exits with a non-zero status.
+
+echo "Starting bastion setup script..."
+
+# Update package lists and install prerequisite packages
+apt-get update -y
+apt-get install -y curl apt-transport-https ca-certificates gnupg
+
+# --- Install/Update kubectl ---
+echo "Checking kubectl installation..."
+# Function to compare version numbers (handles versions like v1.23.4)
+version_gt() {
+    test "$(printf '%s\n' "$@" | sed 's/^v//' | sort -V | head -n 1)" != "$(echo "$1" | sed 's/^v//')";
+}
+
+KUBECTL_PATH="/usr/local/bin/kubectl"
+LATEST_STABLE_K8S_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+
+if ! command -v kubectl &>/dev/null; then
+    echo "kubectl not found. Installing version $LATEST_STABLE_K8S_VERSION..."
+    curl -L "https://dl.k8s.io/release/$LATEST_STABLE_K8S_VERSION/bin/linux/amd64/kubectl" -o $KUBECTL_PATH
+    chmod +x $KUBECTL_PATH
+else
+    current_version=$(kubectl version --client --output=yaml | grep 'clientVersion' | awk '{print $2}')
+    echo "Found kubectl version $current_version."
+    if version_gt "$LATEST_STABLE_K8S_VERSION" "$current_version"; then
+        echo "Updating kubectl from version $current_version to $LATEST_STABLE_K8S_VERSION."
+        curl -L "https://dl.k8s.io/release/$LATEST_STABLE_K8S_VERSION/bin/linux/amd64/kubectl" -o $KUBECTL_PATH
+        chmod +x $KUBECTL_PATH
+    else
+        echo "kubectl is already up to date."
+    fi
+fi
+echo "kubectl setup complete."
+
+# --- Install Google Cloud SDK ---
+echo "Checking Google Cloud SDK installation..."
+if ! command -v gcloud &> /dev/null; then
+    echo "gcloud not found. Installing Google Cloud SDK..."
+    # Add the gcloud CLI distribution URI as a package source
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list
+
+    # Import the Google Cloud public key
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | tee /usr/share/keyrings/cloud.google.gpg
+
+    # Update and install the gcloud CLI and GKE auth plugin
+    apt-get update -y
+    apt-get install -y google-cloud-sdk google-cloud-sdk-gke-gcloud-auth-plugin
+
+    echo "Google Cloud SDK installation complete."
+else
+    echo "gcloud is already installed. Ensuring components are up to date..."
+    gcloud components update --quiet
+fi
+echo "Google Cloud SDK setup complete."
+
+
+# --- Conditional MySQL client installation ---
+# This block is processed by Terraform's templatefile function
+%{ if enable_mysql ~}
+echo "Installing MySQL client because enable_mysql is true..."
+apt-get install -y default-mysql-client
+%{ else ~}
+echo "Skipping MySQL client installation."
+%{ endif ~}
+
+
+echo "Bastion setup script finished successfully."
+EOF
+
+# Make the installation script executable and run it
+chmod +x /tmp/install.sh
+/tmp/install.sh

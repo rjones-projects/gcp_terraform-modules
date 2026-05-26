@@ -1,0 +1,28 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+
+gcs:
+  source:
+    version: v1.1.4
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "a-unique-bucket-name"
+      location: "gcp-region"
+      finops_resource_type: "gcs_bucket"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_data_layer: "raw"
+      

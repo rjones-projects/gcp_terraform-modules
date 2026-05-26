@@ -1,0 +1,25 @@
+project_id: "PROJECT_ID"
+region: "europe-west2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+cloud_build_private_worker_pool:
+  source:
+    version: v1.0.2 
+  depends_on: 
+    -network
+  spec:
+    - name: "test-pool"
+      
+      worker_config: 
+        disk_size_gb: 100
+        machine_type: "e2-standard-4"
+        no_external_ip: false
+      
+      network_config:
+        peered_network: "projects/PROJECT_ID/global/networks/NETWORK_NAME"
+        peered_network_ip_range: "/29"

@@ -1,0 +1,44 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec: []
+
+external_global_address:
+  source:
+    version: v1.0.1
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "test-lb-ip"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "test"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+
+external_global_loadbalancer:
+  source:
+    version: v1.0.1
+  depends_on:
+    - finops_labels
+    - external_global_address
+  spec:
+    - name: "test-global-lb"
+      finops_resource_type: "networking"
+      protocol: "HTTP"
+      address: "test-lb-ip"
+      backends:
+        - backend: "projects/test-project-id/zones/europe-central2-b/instanceGroups/test-group"
+      labels:
+        vf_ngdi_environment: "test"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"

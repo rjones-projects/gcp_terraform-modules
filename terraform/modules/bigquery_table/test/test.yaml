@@ -1,0 +1,83 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source: v1.0.1
+  depends_on: []
+  spec:
+
+bigquery_table:
+  source:
+    version: v1.0.1
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "table_one"
+      dataset_id: "dataset_id"
+      description: "table_description"
+      schema: >
+        [
+          {
+            "name": "permalink",
+            "type": "STRING",
+            "mode": "NULLABLE",
+            "description": "The Permalink"
+          },
+          {
+            "name": "state",
+            "type": "STRING",
+            "mode": "NULLABLE",
+            "description": "State where the head office is located"
+          }
+        ]
+      clustering: 
+        - "clustering_column"
+      deletion_protection: true
+      kms_key_name: "kms_key"
+      time_partitioning:
+        type: "MONTH"
+        field: "time_partitioning_column"
+        expiration_ms: 0
+      finops_resource_type: "bq_table"
+      labels: 
+        vf_ngdi_domain: "mob"
+        vf_cost_item: "ngdi" 
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true
+    - name: "table_two"
+      dataset_id: "dataset_id"
+      description: "table_description"
+      schema: >
+        [
+          {
+            "name": "permalink",
+            "type": "STRING",
+            "mode": "NULLABLE",
+            "description": "The Permalink"
+          },
+          {
+            "name": "state",
+            "type": "STRING",
+            "mode": "NULLABLE",
+            "description": "State where the head office is located"
+          }
+        ]
+      clustering: 
+        - "clustering_column"
+      deletion_protection: true
+      kms_key_name: "kms_key"
+      time_partitioning:
+        type: "DAY"
+        field: "time_partitioning_column"
+        expiration_ms: 0
+      finops_resource_type: "bq_table"
+      labels: 
+        vf_ngdi_domain: "mob"
+        vf_cost_item: "ngdi" 
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true

@@ -1,0 +1,22 @@
+project_id: "your-project-id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+project_iam:
+  source:
+    version: v0.0.2
+  depends_on: []
+  spec:
+    - email: "gcp-project-admins@example.com"
+      roles:
+        - "roles/owner"
+        - "roles/storage.admin"
+
+    - email: "gcp-project-viewers@example.com"
+      roles:
+        - "roles/viewer"
+

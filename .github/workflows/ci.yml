@@ -1,0 +1,409 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'terraform/modules/**'
+      
+concurrency:
+  group: terraform-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+  id-token: write
+
+env:
+  TERRAFORM_VERSION: '1.14.0'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  validate-and-scan:
+    name: Quality, Security
+    runs-on: beta-gke-dind-large-runner
+    env:
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+    outputs:
+      module_matrix: ${{ steps.detect-changes.outputs.MODULE_MATRIX }}
+    
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: 2808607
+          private-key: ${{ secrets.NGDI_APP_PRIVATE_KEY }}
+          owner: VFGROUP-NSE-DNOSS
+      
+      - name: Configure Git Authentication
+        run: |
+          git config --global --unset credential.helper || true
+          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com".insteadOf "https://github.com"
+
+      - name: Checkout Code
+        uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+          token: ${{ steps.app-token.outputs.token }}
+
+      # Node.js is required for the terraform fmt and validation
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '24'
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: '.github/workflows/requirements.txt'
+
+      - name: Detect Changed Modules
+        id: detect-changes
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          
+          git diff --name-only origin/${{ github.base_ref }} HEAD > changed_files.txt
+          
+          # UPDATE: Now detects .tf files AND any .yml or .yaml files in the module
+          CHANGED_MODULE_FILES=$(grep -E '^terraform/modules/.*\.(tf|ya?ml)$' changed_files.txt || true)
+          
+          if [ -z "$CHANGED_MODULE_FILES" ]; then
+            echo "No Terraform or YAML config files changed in modules."
+            echo "MODULE_DIRS=" >> $GITHUB_ENV
+            echo "MODULE_DIRS=" >> $GITHUB_OUTPUT
+            echo 'MODULE_MATRIX={"module":[]}' >> $GITHUB_OUTPUT
+          else
+            # Extract up to the 3rd directory level (terraform/modules/module_name)
+            DIRS=$(echo "$CHANGED_MODULE_FILES" | cut -d/ -f1-3 | sort -u | tr '\n' ' ')
+            echo "Changed module directories: $DIRS"
+            echo "MODULE_DIRS=$DIRS" >> $GITHUB_ENV
+            echo "MODULE_DIRS=$DIRS" >> $GITHUB_OUTPUT
+            
+            # Build JSON for dynamic matrix: {"module":["dir1","dir2",...]}
+            json_modules=$(printf '%s\n' $DIRS | sed 's/.*/"&"/' | paste -sd, -)
+            echo "MODULE_MATRIX={\"module\":[${json_modules}]}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enforce Version & Changelog Updates
+        id: governance
+        if: github.event_name == 'pull_request' && env.MODULE_DIRS != ''
+        run: |
+          FAILURE=0
+          REPORT="### ❌ Governance Check Failed\nThe following modules require updates before merging:\n"
+
+          for module in $MODULE_DIRS; do
+            if [ ! -d "$module" ]; then continue; fi
+            
+            echo "Checking governance for: $module"
+            MODULE_FAIL=0
+            MODULE_MSG="- **$module**:"
+
+            if [ ! -f "$module/VERSION" ]; then
+              MODULE_MSG="$MODULE_MSG <br>&nbsp;&nbsp;• Missing \`VERSION\` file"
+              MODULE_FAIL=1
+            fi
+
+            if [ ! -f "$module/CHANGELOG.md" ]; then
+              MODULE_MSG="$MODULE_MSG <br>&nbsp;&nbsp;• Missing \`CHANGELOG.md\` file"
+              MODULE_FAIL=1
+            fi
+
+            if ! grep -q "^$module/VERSION$" changed_files.txt; then
+              MODULE_MSG="$MODULE_MSG <br>&nbsp;&nbsp;• \`VERSION\` not bumped"
+              MODULE_FAIL=1
+            fi
+
+            if ! grep -q "^$module/CHANGELOG.md$" changed_files.txt; then
+              MODULE_MSG="$MODULE_MSG <br>&nbsp;&nbsp;• \`CHANGELOG.md\` not updated"
+              MODULE_FAIL=1
+            fi
+
+            if [ "$MODULE_FAIL" -eq "1" ]; then
+              FAILURE=1
+              REPORT="$REPORT\n$MODULE_MSG"
+            fi
+          done
+
+          if [ "$FAILURE" -eq "1" ]; then
+            echo -e "$REPORT" > governance_failure.md
+            exit 1
+          fi
+
+      - name: Post Governance Failure Comment
+        if: failure() && steps.governance.outcome == 'failure'
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('governance_failure.md')) {
+              const body = fs.readFileSync('governance_failure.md', 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
+      - name: Prepare Terraform & TFLint cache directories
+        run: |
+          mkdir -p ~/.tflint.d/plugins
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - name: Cache Terraform & TFLint
+        uses: actions/cache@v5.0.3
+        with:
+          path: |
+            ~/.tflint.d/plugins
+            ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: ${{ runner.os }}-tf-${{ env.TERRAFORM_VERSION }}-tflint-${{ hashFiles('.tflint.hcl') }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-tf-${{ env.TERRAFORM_VERSION }}-tflint-
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Install TFLint & Checkov
+        run: |
+          # Install TFLint
+          curl -sSLo tflint.zip https://github.com/terraform-linters/tflint/releases/download/v0.50.0/tflint_linux_amd64.zip
+          unzip tflint.zip
+          chmod +x tflint
+          sudo mv tflint /usr/local/bin/
+          rm tflint.zip
+          tflint --init
+          
+          # Install Checkov
+          pip install checkov
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Terraform Format & Auto-Commit
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            mkdir -p "$TF_PLUGIN_CACHE_DIR"
+            terraform fmt -recursive terraform/modules
+            if [[ -n $(git status --porcelain terraform/modules) ]]; then
+              git config --global user.name 'github-actions[bot]'
+              git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+              git add terraform/modules
+              git commit --no-verify -m "style: auto-format terraform code"
+              git push origin HEAD:${{ github.event.pull_request.head.ref }}
+            fi
+          else
+            mkdir -p "$TF_PLUGIN_CACHE_DIR"
+            terraform fmt -check -recursive terraform/modules
+          fi
+
+      - name: Run TFLint & TF Validate
+        if: env.MODULE_DIRS != ''
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+          for dir in $MODULE_DIRS; do
+            if [ -d "$dir" ]; then
+              echo "::group::Processing $dir"
+              cd "$GITHUB_WORKSPACE/$dir"
+              tflint -f compact
+              terraform init -backend=false -no-color
+              terraform validate -no-color
+              cd "$GITHUB_WORKSPACE"
+              echo "::endgroup::"
+            fi
+          done
+
+      - name: Run Checkov
+        if: env.MODULE_DIRS != ''
+        run: |
+          CHECKOV_DIRS=$(for dir in $MODULE_DIRS; do if [ -d "$dir" ]; then echo -n "-d $dir "; fi; done)
+          if [ -n "$CHECKOV_DIRS" ]; then
+            checkov $CHECKOV_DIRS --framework terraform --output cli --output junitxml --output-file-path console,checkov_report.xml
+          fi
+
+  unit-test-modules:
+    name: Terraform Unit Tests (${{ matrix.module }})
+    needs: validate-and-scan
+    runs-on: beta-gke-dind-large-runner
+    env:
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.validate-and-scan.outputs.module_matrix) }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Prepare Terraform cache directory
+        run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+
+      - name: Cache Terraform providers
+        uses: actions/cache@v5.0.3
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: ${{ runner.os }}-tf-${{ env.TERRAFORM_VERSION }}-providers-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-tf-${{ env.TERRAFORM_VERSION }}-providers-
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Run Terraform Tests
+        id: terraform_test
+        run: |
+          set -eo pipefail
+          MODULE="${{ matrix.module }}"
+          TESTS_DIR="$MODULE/tests"
+
+          if [ ! -d "$TESTS_DIR" ] || ! find "$TESTS_DIR" -maxdepth 1 -name "*.tftest.hcl" | grep -q .; then
+            echo "No .tftest.hcl files found in $TESTS_DIR — skipping."
+            exit 0
+          fi
+
+          echo "::group::terraform init"
+          terraform -chdir="$MODULE" init -backend=false -no-color
+          echo "::endgroup::"
+
+          echo "::group::terraform test"
+          terraform -chdir="$MODULE" test -no-color 2>&1 | tee test_output.txt
+          echo "::endgroup::"
+
+      - name: Post Test Results to PR
+        if: always()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            let testOutput = fs.existsSync('test_output.txt') ? fs.readFileSync('test_output.txt', 'utf8') : 'No test output found.';
+            const isSuccess = '${{ steps.terraform_test.outcome }}' === 'success';
+
+            if (testOutput.length > 60000) {
+              testOutput = testOutput.substring(0, 60000) + "\n\n... (Output truncated) ...";
+            }
+
+            const body = `### ${isSuccess ? '✅' : '❌'} Terraform Unit Tests: ${isSuccess ? 'Passed' : 'Failed'}\n\n` +
+              `**Module:** \`${{ matrix.module }}\`\n\n` +
+              `<details>\n<summary>🔍 Click to view test output</summary>\n\n\`\`\`terraform\n${testOutput}\n\`\`\`\n</details>`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
+  test-modules:
+    name: Validate & Plan (${{ matrix.module }})
+    needs: validate-and-scan
+    runs-on: znl-gke-dind-large-runner
+    env:
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.validate-and-scan.outputs.module_matrix) }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Prepare Terraform cache directory
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - name: Cache Terraform providers
+        uses: actions/cache@v5.0.3
+        with:
+          path: ${{ env.TF_PLUGIN_CACHE_DIR }}
+          key: ${{ runner.os }}-tf-${{ env.TERRAFORM_VERSION }}-providers-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            ${{ runner.os }}-tf-${{ env.TERRAFORM_VERSION }}-providers-
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: '24'    
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: '.github/workflows/requirements.txt'
+
+      - name: Install Python Dependencies
+        run: pip install PyYAML
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v3'
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER_URL }}
+          service_account: ${{ secrets.SA_NAME }}
+          project_id: "vf-gned-ngdi-alpha-orch"
+
+      - name: Make Scripts Executable
+        run: |
+          # Dynamically find the scripts and make them executable wherever they are
+          find . -type f -name "test_modules.sh" -exec chmod +x {} \;
+          find . -type f -name "yaml_to_tfvars.py" -exec chmod +x {} \;
+
+      - name: Run Module Tests
+        id: test_run
+        shell: bash
+        run: |
+          set -eo pipefail
+          
+          # 1. Find the exact path to test_modules.sh
+          TEST_SCRIPT=$(find . -type f -name "test_modules.sh" | head -n 1)
+          
+          if [[ -z "$TEST_SCRIPT" ]]; then
+            echo "❌ Error: test_modules.sh not found anywhere in the repository!"
+            echo "Please ensure the file is committed and pushed to your branch."
+            exit 1
+          fi
+          
+          echo "✅ Found script at: $TEST_SCRIPT"
+          
+          # 2. Execute the dynamically found script
+          $TEST_SCRIPT "${{ matrix.module }}" 2>&1 | tee test_output.txt
+
+      - name: Post Test Results to PR
+        if: always()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            let testOutput = fs.existsSync('test_output.txt') ? fs.readFileSync('test_output.txt', 'utf8') : 'No output log found.';
+            const isSuccess = '${{ steps.test_run.outcome }}' === 'success';
+            
+            if (testOutput.length > 60000) {
+              testOutput = testOutput.substring(0, 60000) + "\n\n... (Output truncated) ...";
+            }
+
+            const body = `### ${isSuccess ? '✅' : '❌'} Terraform Module Test Results: ${isSuccess ? 'Passed' : 'Failed'}\n\n` +
+              `**Module Tested:** \`${{ matrix.module }}\`\n\n` +
+              `<details>\n<summary>🔍 Click to view full logs</summary>\n\n\`\`\`terraform\n${testOutput}\n\`\`\`\n</details>`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });

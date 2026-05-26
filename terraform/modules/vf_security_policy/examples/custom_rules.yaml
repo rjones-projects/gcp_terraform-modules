@@ -1,0 +1,39 @@
+project_id: "project_id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+vf_security_policy:
+  source:
+    version: v1.0.0
+  depends_on: []
+  spec:
+    - name: "example-security-policy"
+      description: "description of security policy" # Optional
+      enable_waf: true
+      custom_waf_rules:
+        - action: "rule action"
+          expression: "rule expression"
+          description: "rule description"
+      
+      enable_layer_7_ddos_defense: true
+      enable_ssl_policy: true
+      ssl_policy_name: "example-ssl-policy"
+
+      enable_custom_rules: true
+      custom_rules: 
+        - priority: 1000
+          action: "action"
+          description: "rule description" # Optional
+          preview: false # Optional
+          expression: "rule_expression" # Optional
+          src_ip_range: # Optional
+            - "ip"
+
+      additonal_networks:
+        - cidr_ranges:
+            - "ip_range"
+          description: "Network description"

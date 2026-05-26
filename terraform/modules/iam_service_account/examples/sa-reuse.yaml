@@ -1,0 +1,31 @@
+project_id: "project_id"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+iam_service_account:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec: 
+    - name: "tester-sa"
+      project_id: "project_id_where_sa_exists"
+      # service_account_reuse: {} also valid for reusing exisiting sa
+      service_account_reuse: 
+        attributes:
+          project_number: 34686103
+          unique_id: 8638172901 #SA unique ID
+
+      #Instructs Terraform to not try creating a service account as it already exists
+      create_ignore_already_exists: true
+      
+      iam_project_roles:
+        "project_id":
+          - "roles/iam.serviceAccountTokenCreator"
+
+      # iam_sa_roles allows you to grant permissions on a service account
+      iam_sa_roles:
+        "sa_name":
+          - "roles/iam.serviceAccountTokenCreator"

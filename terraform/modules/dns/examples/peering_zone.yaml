@@ -1,0 +1,22 @@
+project_id: "PROJECT ID"
+region: "europe-west2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+dns:
+  source:
+    version: 1.0.0
+  depends_on: 
+    - network
+  spec:
+    - name: "peering_zone"
+      zone_config:
+        domain: "peering."
+        peering:
+          client_networks:
+            - "projects/PROJECT_ID/global/networks/VPC_NAME"
+          peer_network: "projects/PROJECT_ID/global/networks/PEERED_VPC_NAME"

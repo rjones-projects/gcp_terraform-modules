@@ -1,0 +1,29 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.2
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "test-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+      auto_create_subnetworks: false
+      routing_mode: "REGIONAL"
+      description: "Test VPC"

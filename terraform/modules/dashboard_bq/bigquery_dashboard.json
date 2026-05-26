@@ -1,0 +1,149 @@
+{
+  "displayName": "NGDI BQ Dashboard",
+  "gridLayout": {
+    "columns": 2,
+    "widgets": [
+ 
+      {
+        "title": "BigQuery Query Count",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "Queries",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"bigquery_project\" AND metric.type=\"bigquery.googleapis.com/query/count\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_SUM"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+ 
+      {
+        "title": "Query Execution Time (P95)",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "P95 Execution Time",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"bigquery_project\" AND metric.type=\"bigquery.googleapis.com/query/execution_times\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_PERCENTILE_95"
+                  }
+                }
+              }
+            }
+          ],
+          "yAxis": {
+            "label": "Milliseconds",
+            "scale": "LINEAR"
+          }
+        }
+      },
+ 
+      {
+        "title": "Scanned Bytes Billed",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "Bytes Billed",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"bigquery_project\" AND metric.type=\"bigquery.googleapis.com/query/scanned_bytes_billed\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_SUM"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+
+      {
+  "xyChart": {
+    "dataSets": [
+      {
+        "timeSeriesQuery": {
+          "timeSeriesFilter": {
+            "filter": "metric.type=\"bigquery.googleapis.com/slots/total_allocated_for_reservation\" resource.type=\"global\"",
+            "aggregation": {
+              "perSeriesAligner": "ALIGN_MEAN",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "groupByFields": [],
+              "alignmentPeriod": "60s"
+            }
+          }
+        },
+        "plotType": "STACKED_BAR",
+        "targetAxis": "Y1",
+        "minAlignmentPeriod": "60s"
+      }
+    ],
+    "chartOptions": {
+      "mode": "COLOR",
+      "displayHorizontal": false
+    },
+    "thresholds": [],
+    "yAxis": {
+      "scale": "LINEAR"
+    }
+  }
+},
+ 
+      {
+        "title": "Slots Allocated for Project",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "Allocated Slots",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"bigquery_project\" AND metric.type=\"bigquery.googleapis.com/slots/allocated_for_project\"",
+                  "aggregation": {
+                    "alignmentPeriod": "300s",
+                    "perSeriesAligner": "ALIGN_MEAN"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+ 
+      {
+        "title": "BigQuery Stored Bytes",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "Stored Bytes",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"bigquery_project\" AND metric.type=\"bigquery.googleapis.com/storage/stored_bytes\"",
+                  "aggregation": {
+                    "alignmentPeriod": "3600s",
+                    "perSeriesAligner": "ALIGN_MAX"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+ 
+    ]
+  }
+}

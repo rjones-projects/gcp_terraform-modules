@@ -1,0 +1,79 @@
+project_id: "project_id"
+region: "europe-west1"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec: []
+
+external_global_address:
+  source:
+    version: v1.0.2
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "lb-frontend-global-ip"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+    - name: "lb-api-global-ip"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+
+external_global_loadbalancer:
+  source:
+    version: v1.0.2
+  depends_on:
+    - finops_labels
+    - external_global_address
+  spec:
+    - name: "lb-frontend-global"
+      finops_resource_type: "networking"
+      protocol: "HTTPS"
+      use_classic_version: false
+      address: "lb-frontend-global-ip"
+      backends:
+        - backend: "projects/your-project-id/zones/europe-west1-b/instanceGroups/frontend-group-1"
+          balancing_mode: "UTILIZATION"
+        - backend: "projects/your-project-id/zones/europe-west1-c/instanceGroups/frontend-group-2"
+          balancing_mode: "UTILIZATION"
+      backend_protocol: "HTTP"
+      ssl_certificates:
+        certificate_ids:
+          - "projects/your-project-id/global/sslCertificates/frontend-cert"
+      health_check:
+        http:
+          port: 8080
+          request_path: "/health"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        role: "frontend"
+    - name: "lb-api-global"
+      finops_resource_type: "networking"
+      protocol: "HTTP"
+      use_classic_version: true
+      address: "lb-api-global-ip"
+      backends:
+        - backend: "projects/your-project-id/zones/europe-west1-b/instanceGroups/api-group"
+      health_check:
+        http:
+          port: 8080
+          request_path: "/api/health"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        role: "api"

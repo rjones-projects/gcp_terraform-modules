@@ -1,0 +1,147 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "main-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-central2"
+
+firewall:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+    - network: "main-vpc"
+      default_rules_config:
+        admin_ranges:
+          - "10.0.0.0/8"
+    
+    - network: "main-vpc"
+      default_rules_config:
+        admin_ranges:
+          - "10.0.0.0/8"
+      egress_rules:
+        allow-egress-rfc1918:
+          deny: false
+          description: "Allow egress to RFC 1918 ranges."
+          destination_ranges:
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"
+            - "192.168.0.0/16"
+        allow-egress-tag:
+          deny: false
+          description: "Allow egress from a specific tag to 0/0."
+          targets:
+            - "target-tag"
+        deny-egress-all:
+          description: "Block egress."
+      ingress_rules:
+        allow-ingress-ntp:
+          description: "Allow NTP service based on tag."
+          targets:
+            - "ntp-svc"
+          rules:
+            - protocol: "udp"
+              ports:
+                - "123"
+        allow-ingress-tag:
+          description: "Allow ingress from a specific tag."
+          source_ranges: []
+          sources:
+            - "client-tag"
+          targets:
+            - "target-tag"
+    
+    - network: "main-vpc"
+      default_rules_config:
+        ssh_ranges:
+          - "10.0.0.0/8"
+        ssh_tags:
+          - "ssh-default"
+    
+    - network: "main-vpc"
+      default_rules_config:
+        disabled: true
+      factories_config:
+        rules_folder: "configs/firewall/rules"
+        cidr_tpl_file: "configs/firewall/cidrs.yaml"
+      named_ranges:
+        healthchecks:
+          - "35.191.0.0/16"
+          - "130.211.0.0/22"
+          - "209.85.152.0/22"
+          - "209.85.204.0/22"
+
+    - network: "main-vpc"
+      default_rules_config:
+        disabled: true
+      egress_rules:
+        allow-egress-github:
+          deny: false
+          description: "Allow egress to GitHub FQDNs."
+          destination_fqdns:
+            - "github.com"
+            - "api.github.com"
+          rules:
+            - protocol: "tcp"
+              ports:
+                - "443"
+      ingress_rules:
+        allow-ingress-partner:
+          deny: false
+          description: "Allow HTTPS ingress from partner FQDN."
+          source_fqdns:
+            - "api.partner-network.com"
+          rules:
+            - protocol: "tcp"
+              ports:
+                - "443"
+    
+    - network: "main-vpc"
+      default_rules_config:
+        disabled: true
+      egress_rules:
+        deny-egress-source-destination-ranges:
+          description: "Deny egress using source and destination ranges"
+          source_ranges:
+            - "10.132.0.0/20"
+            - "10.138.0.0/20"
+          destination_ranges:
+            - "172.16.0.0/12"
+      ingress_rules:
+        allow-ingress-source-destination-ranges:
+          description: "Allow ingress using source and destination ranges"
+          source_ranges:
+            - "172.16.0.0/12"
+          destination_ranges:
+            - "10.132.0.0/20"
+            - "10.138.0.0/20"
+    
+    - network: "main-vpc"
+      default_rules_config:
+        disabled: true
+
+    - network: "main-vpc"
+      default_rules_config:
+        ssh_ranges: []

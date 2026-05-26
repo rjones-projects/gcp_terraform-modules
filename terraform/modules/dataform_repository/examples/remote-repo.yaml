@@ -1,0 +1,42 @@
+project_id: "project_id"
+region: "gcp-region"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops-lables:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+dataform_repository:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+    - dataform_repository_name: "dataform-repo-name"
+      git_repository:  "git-repo"
+      git_repo_url: "git-repo-url"
+      default_branch: "default-branch"
+      secret_version_path: "projects/project-id/secrets/secret-name/versions/version"
+      host_public_key: "github.com ssh-ed25519"
+      df_service_account: "example-service-account@project_id.iam.gserviceaccount.com"
+      default_database: "database"
+      schema_suffix: "_suffix"
+      table_prefix: "prefix_"
+      dataform_viewer:
+        special_groups:
+            - "allUsers"
+      create_csr_repo: true
+      finops_resource_type: "dataform_repository"
+      labels: 
+        vf_ngdi_domain: "mob"
+        vf_cost_item: "ngdi" 
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true
+      
+      

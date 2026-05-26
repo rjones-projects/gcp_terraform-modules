@@ -1,0 +1,27 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+iam_custom_role_stack:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - target_project_ids:
+        - "vf-gned-ngdi-alpha-etl"
+        - "vf-gned-ngdi-alpha-dhk"
+        - "vf-gned-ngdi-alpha-ing"
+        - "vf-gned-ngdi-alpha-dh"
+      role_id: "ngdi_platform_admin"
+      title: "NGDI Platform Admin"
+      description: "Custom role for NGDI Terraform deployments"
+      resolve_base_roles: false
+      additional_permissions: 
+        - "servicenetworking.services.addPeering"
+        - "servicenetworking.services.deletePeering"
+      members: 
+        - "serviceAccount:ngdi-terraform-alpha@vf-gned-ngdi-alpha-orch.iam.gserviceaccount.com"

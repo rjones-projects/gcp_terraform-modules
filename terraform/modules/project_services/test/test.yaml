@@ -1,0 +1,21 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+project_services:
+  source:
+    version: 1.0.6
+  depends_on: []
+  spec:
+    - name: "service"
+      service_list:
+        - "cloudresourcemanager.googleapis.com"
+        - "iam.googleapis.com"
+        - "run.googleapis.com"
+      service_config: 
+        disable_on_destroy: false
+        disable_dependent_services: false

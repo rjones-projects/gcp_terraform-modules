@@ -1,0 +1,29 @@
+project_id: "your-project-id"
+region: "europe-west2"
+env: "alpha"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec: []
+
+notification_channel:
+  source:
+    version: v1.0.0
+  depends_on: 
+    - finops_labels
+  spec:
+    - name: "platform-alerts"
+      display_name: "Platform Alerts Channel"
+      email_address: "platform-team@example.com"
+      type: "email"
+      finops_resource_type: "notification_channel"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"

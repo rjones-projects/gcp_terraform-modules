@@ -1,0 +1,56 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+
+dataform_repository:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - dataform_repository_name: "dataform-repo-name"
+      git_repository:  "git-repo"
+      git_repo_url: "git-repo-url"
+      default_branch: "default-branch"
+      secret_version_path: "projects/project-id/secrets/secret-name/versions/version"
+      host_public_key: "github.com ssh-ed25519"
+      df_service_account: "example-service-account@project_id.iam.gserviceaccount.com"
+      default_database: ""
+      schema_suffix: ""
+      table_prefix: ""
+      dataform_viewer:
+        special_groups:
+            - "allUsers"
+      dataform_editor:
+        groups:
+            - "example-group@googlegroups.com"
+      dataform_admin:
+        users:
+            - "user-name@example.com"
+      dataform_codeViewer:
+        service_accounts:
+            - "example-service-account@project_id.iam.gserviceaccount.com"
+      dataform_codeEditor:
+        groups:
+            - "example-group@googlegroups.com"
+      dataform_codeOwner:
+        users:
+            - "user-name@example.com"
+      create_csr_repo: true
+      finops_resource_type: "dataform_repository"
+      labels: 
+        vf_ngdi_domain: "mob"
+        vf_cost_item: "ngdi" 
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true
+      
+      

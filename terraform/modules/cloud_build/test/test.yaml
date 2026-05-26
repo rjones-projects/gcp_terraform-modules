@@ -1,0 +1,14 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+cloud_build:
+  source:
+    version: v1.0.1
+  spec:
+  - name: "cloud-build-name"
+    location: "europe-west2"

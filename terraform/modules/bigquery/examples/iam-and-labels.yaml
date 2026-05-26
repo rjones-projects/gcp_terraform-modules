@@ -1,0 +1,72 @@
+project_id: "project_id"
+region: "gcp-region"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+
+bigquery:
+  source:
+    version: v1.0.7
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "dataset_id"
+      friendly_name: "a_friendly_name"
+      description: "dataset_description"
+      location: "gcp-region"
+      delete_contents_on_destroy: false
+      cmek_key_name: null
+      finops_resource_type: "bq_dataset"
+      labels: 
+        vf_ngdi_data_product: null
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true
+      labels:
+        env: "dev"
+        owner: "platform"
+      iam:
+        owners:
+          groups:
+            - "example-group@googlegroups.com"
+          service_accounts:
+            - "example-service-account@project_id.iam.gserviceaccount.com"
+          special_groups:
+            - "projectOwners"
+          users:
+            - "user-name@example.com"
+        writers:
+          groups:
+            - "example-group@googlegroups.com"
+          service_accounts:
+            - "example-service-account@project_id.iam.gserviceaccount.com"
+          special_groups:
+            - "projectWriters"
+          users:
+            - "user-name@example.com"
+        readers:
+          groups:
+            - "example-group@googlegroups.com"
+          service_accounts:
+            - "example-service-account@project_id.iam.gserviceaccount.com"
+          special_groups:
+            - "projectReaders"
+          users:
+            - "user-name@example.com"
+        users:
+          groups:
+            - "example-group@googlegroups.com"
+          service_accounts:
+            - "example-service-account@project_id.iam.gserviceaccount.com"
+          special_groups:
+            - "projectOwners"
+          users:
+            - "user-name@example.com"

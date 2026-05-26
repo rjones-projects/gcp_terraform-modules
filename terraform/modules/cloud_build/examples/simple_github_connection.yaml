@@ -1,0 +1,29 @@
+project_id: "your-project-id"
+region: "your-region"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+cloud_build:
+  source:
+    version: v1.0.2
+  spec:
+  - name: "cloud-build-name"
+    location: "europe-west2"
+    connection_config:
+      github:
+        authorizer_credential_secret_version: module.secret_manager.version_ids["authorizer-credential/v1"]
+        app_installation_id: 1234567
+    repositories:
+      my-repository:
+        remote_uri: "https://github.com/my-user/my-repo.git"
+        triggers:
+          my-trigger:
+            push:
+              branch: "main"
+            filename: "cloudbuild.yaml"
+    iam:
+      "roles/cloudbuild.connectionViewer": ["member@example.com"]

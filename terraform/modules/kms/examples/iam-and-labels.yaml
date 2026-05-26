@@ -1,0 +1,48 @@
+project_id: "project_id"
+region: "europe-central2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source: "../../finops_labels"
+  depends_on: []
+  spec:
+
+kms:
+  source:
+    version: v2.0.0
+  depends_on:
+    - finops_labels
+  spec:
+    - keyring:
+        location: "europe-central2"
+        name: "iam-keyring"
+      keys:
+        rotating-key:
+          finops_resource_type: "kms"
+          rotation_period: "604800s"
+          labels:
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_shared: true
+            vf_ngdi_goal: "encrypt-at-rest"
+            vf_ngdi_domain: "pltfrm"
+          skip_initial_version_creation: true
+          iam:
+            "roles/cloudkms.cryptoKeyEncrypterDecrypter":
+              - "user:alice@example.com"
+          iam_bindings:
+            viewer-binding:
+              role: "roles/cloudkms.cryptoKeyViewer"
+              members:
+                - "group:auditors@example.com"
+              condition:
+                title: "Time-bound"
+                expression: "request.time < timestamp('2027-01-01T00:00:00Z')"
+          iam_bindings_additive:
+            additive-binding:
+              role: "roles/cloudkms.cryptoKeyEncrypter"
+              member: "user:bob@example.com"

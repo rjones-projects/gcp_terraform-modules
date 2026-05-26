@@ -1,0 +1,142 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source: v1.0.1
+  depends_on: []
+  spec:
+
+iam_service_account:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec: 
+    - name: "composer-sa"
+      iam_project_roles:
+        "vf-gned-ngdi-alpha-pltfrm-orch": 
+          - "roles/composer.worker"
+          - "roles/logging.logWriter"
+          - "roles/monitoring.metricWriter"
+          - "roles/iam.serviceAccountUser"
+
+gcs:
+  source:
+    version: v1.1.4
+  spec:
+    - name: "terraform-composer-test1"
+      location: "europe-west2"
+
+network:
+  source:
+    version: v1.1.2
+  depends_on:
+  spec:
+    - name: "test-vpc"
+      finops_resource_type: "networking"
+      labels:
+        # Required / commonly provided FinOps inputs for networking resources.
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        # Optional but valid for networking (location marker).
+        vf_ngdi_location: "europe-central2"
+      subnets:
+        - name: "private-subnet"
+          ip_cidr_range: "10.0.2.0/24"
+          enable_private_access: true
+          allow_nat: false
+
+
+composer_environment:
+  source:
+    version: v1.0.2
+  depends_on:
+    - gcs
+    - iam_service_account
+    - network
+  spec:
+    - name: "test-env"
+      composer_service_account: "composer-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+      network: "test-vpc"
+      subnetwork: "vf-gned-ngdi-alpha-pltfrm-orch-subnet-private-subnet"
+      grant_sa_agent_permission: true
+      storage_bucket: "terraform-composer-test1"
+      use_private_environment: true
+      enable_private_builds_only: true
+      resilience_mode: "STANDARD_RESILIENCE"
+      web_server_network_access_control:
+        - allowed_ip_range: "0.0.0.0/0"
+          description: "Allows access from all IPv4 addresses (default value)"
+        - allowed_ip_range: "::0/0"
+          description: "Allows access from all IPv6 addresses (default value)"
+      scheduler: 
+        cpu: 1
+        memory_gb: 4
+        storage_gb: 5
+        count: 2
+      dag_processor:
+        cpu: 1
+        memory_gb: 4
+        storage_gb: 5
+        count: 1
+      web_server:
+        cpu: 2
+        memory_gb: 7.5
+        storage_gb: 5
+      worker:
+        cpu: 1
+        memory_gb: 5
+        storage_gb: 3
+        min_count: 1
+        max_count: 2
+      triggerer:
+        cpu: 1
+        memory_gb: 1
+        count: 1
+
+    - name: "test-env2"
+      composer_service_account: "composer-sa@vf-gned-ngdi-alpha-pltfrm-orch.iam.gserviceaccount.com"
+      network: "test-vpc"
+      subnetwork: "private-subnet"
+      grant_sa_agent_permission: true
+      storage_bucket: "terraform-composer-test1"
+      use_private_environment: true
+      enable_private_builds_only: true
+      resilience_mode: "STANDARD_RESILIENCE"
+      web_server_network_access_control:
+        - allowed_ip_range: "0.0.0.0/0"
+          description: "Allows access from all IPv4 addresses (default value)"
+        - allowed_ip_range: "::0/0"
+          description: "Allows access from all IPv6 addresses (default value)"
+      scheduler: 
+        cpu: 1
+        memory_gb: 4
+        storage_gb: 5
+        count: 2
+      dag_processor:
+        cpu: 1
+        memory_gb: 4
+        storage_gb: 5
+        count: 1
+      web_server:
+        cpu: 2
+        memory_gb: 7.5
+        storage_gb: 5
+      worker:
+        cpu: 1
+        memory_gb: 5
+        storage_gb: 3
+        min_count: 1
+        max_count: 2
+      triggerer:
+        cpu: 1
+        memory_gb: 1
+        count: 1
+
+
+

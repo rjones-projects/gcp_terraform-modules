@@ -1,0 +1,45 @@
+project_id: "project_id"
+region: "europe-west2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+composer_environment:
+  source:
+    version: v1.0.3
+  depends_on:
+  spec:
+    - name: "test-env"
+      composer_service_account: "service_account_name@project_id.iam.gserviceaccount.com"
+      network: "NETWORK NAME"
+      subnetwork: "SUBNETWORK ID"
+      storage_bucket: "BUCKET NAME"
+      use_private_environment: true
+      enable_private_builds_only: true
+      scheduler: 
+        cpu: 1
+        memory_gb: 4
+        storage_gb: 5
+        count: 2
+      dag_processor:
+        cpu: 1
+        memory_gb: 4
+        storage_gb: 5
+        count: 1
+      web_server:
+        cpu: 2
+        memory_gb: 7.5
+        storage_gb: 5
+      worker:
+        cpu: 1
+        memory_gb: 5
+        storage_gb: 3
+        min_count: 1
+        max_count: 2
+      triggerer:
+        cpu: 1
+        memory_gb: 1
+        count: 1

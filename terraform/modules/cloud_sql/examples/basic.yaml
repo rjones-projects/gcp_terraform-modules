@@ -1,0 +1,59 @@
+project_id: "project_id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+kms:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - keyring:
+        location: "europe-central2"
+        name: "keyring-project_id-europe-west2-sql"
+      keys:
+        cmek-project_id-europe-west2-sql:
+          rotation_period: "7776000s"
+          labels:
+            env: "dev"
+            owner: "platform"
+          version_template:
+            algorithm: "GOOGLE_SYMMETRIC_ENCRYPTION"
+            protection_level: "HSM"
+          iam:
+            "roles/cloudkms.cryptoKeyEncrypterDecrypter":
+              - "serviceAccount:service-project_number@gcp-sa-cloud-sql.iam.gserviceaccount.com"
+
+cloud_sql:
+  source:
+    version: v1.0.0
+  depends_on:
+    - finops_labels
+    - kms
+  spec:
+    - name: "example-instance"
+      database_version: "POSTGRES_15"
+      tier: "db-f1-micro"
+      disk_size: 40
+      ssl_mode: "ENCRYPTED_ONLY"
+      deletion_protection: false
+      databases:
+        - "example_db"
+      encryption_key_name: "projects/project_id/locations/europe-west2/keyRings/keyring-project_id-europe-west2-sql/cryptoKeys/cmek-project_id-europe-west2-sql"
+      finops_resource_type: "compute"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west2"
+      
+      

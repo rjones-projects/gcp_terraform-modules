@@ -1,0 +1,26 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+secret_manager:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+    - secret_id: "db-password"
+      replication_automatic: true
+      generate_random_password: true
+      labels:
+        app: "billing"
+        env: "dev"
+    - secret_id: "api-key"
+      replication_automatic: true
+      secret_data: "replace-me"
+      labels:
+        app: "billing"
+        env: "dev"

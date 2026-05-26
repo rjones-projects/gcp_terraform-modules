@@ -1,0 +1,139 @@
+{
+  "displayName": "GCS – Operations & Platform Monitoring",
+  "gridLayout": {
+    "columns": 2,
+    "widgets": [
+      {
+        "title": "GCS Storage Used per Bucket (GB)",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "{{resource.label.bucket_name}}",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"gcs_bucket\" AND metric.type=\"storage.googleapis.com/storage/total_bytes\"",
+                  "aggregation": {
+                    "alignmentPeriod": "86400s",
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "groupByFields": [
+                      "resource.label.bucket_name"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }, 
+      {
+        "title": "GCS Object Count per Bucket",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "{{resource.label.bucket_name}}",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"gcs_bucket\" AND metric.type=\"storage.googleapis.com/storage/object_count\"",
+                  "aggregation": {
+                    "alignmentPeriod": "86400s",
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "groupByFields": [
+                      "resource.label.bucket_name"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+ 
+      {
+        "title": "Inbound Data per Bucket (Daily)",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "{{resource.label.bucket_name}}",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"gcs_bucket\" AND metric.type=\"storage.googleapis.com/network/received_bytes_count\"",
+                  "aggregation": {
+                    "alignmentPeriod": "86400s",
+                    "perSeriesAligner": "ALIGN_SUM",
+                    "groupByFields": [
+                      "resource.label.bucket_name"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+ 
+      {
+        "title": "Outbound Data per Bucket (Daily)",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "{{resource.label.bucket_name}}",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"gcs_bucket\" AND metric.type=\"storage.googleapis.com/network/sent_bytes_count\"",
+                  "aggregation": {
+                    "alignmentPeriod": "86400s",
+                    "perSeriesAligner": "ALIGN_SUM",
+                    "groupByFields": [
+                      "resource.label.bucket_name"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+ 
+      {
+        "title": "Storage Usage – Valid vs Rejected Buckets",
+        "xyChart": {
+          "dataSets": [
+            {
+              "legendTemplate": "Valid",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"gcs_bucket\" AND metric.type=\"storage.googleapis.com/storage/total_bytes\" AND resource.label.bucket_name=starts_with(\"valid-\")",
+                  "aggregation": {
+                    "alignmentPeriod": "86400s",
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "crossSeriesReducer": "REDUCE_SUM"
+                  }
+                }
+              }
+            },
+            {
+              "legendTemplate": "Rejected",
+              "plotType": "STACKED_BAR",
+              "timeSeriesQuery": {
+                "timeSeriesFilter": {
+                  "filter": "resource.type=\"gcs_bucket\" AND metric.type=\"storage.googleapis.com/storage/total_bytes\" AND resource.label.bucket_name=starts_with(\"rejected-\")",
+                  "aggregation": {
+                    "alignmentPeriod": "86400s",
+                    "perSeriesAligner": "ALIGN_MEAN",
+                    "crossSeriesReducer": "REDUCE_SUM"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+ 
+    ]
+  }
+}

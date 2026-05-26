@@ -1,0 +1,41 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec: []
+
+pubsub:
+  source:
+    version: v1.0.2
+  depends_on:
+    - finops_labels
+  spec:
+    - topic_name: "orders-events"
+      finops_resource_type: "pubsub"
+      message_retention_duration: "604800s"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_shared: "true"
+      notifications:
+        - bucket: "your-project-id-terraform-state"
+          event_types:
+            - "OBJECT_FINALIZE"
+          payload_format: "JSON_API_V1"
+      subscriptions:
+        - name: "orders-events-pull"
+          ack_deadline_seconds: 20
+          retain_acked_messages: false
+          labels:
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_shared: "true"

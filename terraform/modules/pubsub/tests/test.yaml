@@ -1,0 +1,32 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec: []
+
+pubsub:
+  source:
+    version: v1.0.1
+  depends_on:
+    - finops_labels
+  spec:
+    - topic_name: "test-topic"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_shared: "true"
+      subscriptions:
+        - name: "test-subscription"
+          ack_deadline_seconds: 20
+          labels:
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_shared: "true"

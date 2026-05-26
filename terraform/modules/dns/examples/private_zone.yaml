@@ -1,0 +1,33 @@
+project_id: "PROJECT ID"
+region: "europe-west2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+dns:
+  source:
+    version: 1.0.0
+  depends_on: 
+    - network
+  spec:
+    - name: "private_zone"
+      zone_config:
+        domain: "testingexample.com."
+        private: 
+          client_networks: 
+            - "projects/PROJECT_ID/global/networks/VPC_NAME"
+      recordsets:
+        "A localhost": 
+          records:
+            - "127.0.0.1"
+        "A myhost":
+          records:
+            - "10.0.0.120"
+          ttl:
+            - 600
+      iam:
+        "roles/dns.admin":
+          - "group:GROUP_NAME" 

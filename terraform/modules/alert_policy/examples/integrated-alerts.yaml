@@ -1,0 +1,66 @@
+project_id: "your-project-id"
+region: "europe-west2"
+env: "alpha"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source: "../modules/finops_labels"
+  depends_on: []
+  spec: []
+
+# 1. Creates the Notification Channels
+notification_channel:
+  source: 
+    version: v1.0.0
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "cloud-analytics-team"
+      display_name: "Cloud Analytics Support"
+      email_address: "cloud-analytics-team@vodafone.com"
+      finops_resource_type: "notification_channel"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+
+    - name: "neds-support"
+      display_name: "NEDS Support Channel"
+      email_address: "neds-support@vodafone.com"
+      finops_resource_type: "notification_channel"
+      labels:
+        vf_ngdi_environment: "alpha"
+
+# 2. Creates the Alerts and dynamically maps the channels
+alert_policy:
+  source: 
+    version: v1.0.0
+  depends_on:
+    - finops_labels
+    - notification_channel 
+  spec:
+    - alert_name: "bucket_delete"
+      metric_name: "gcs-bucket/bucket-delete"
+      create_metric: true
+      custom_metric_filter: 'resource.type="gcs_bucket" AND protoPayload.methodName="storage.buckets.delete"'
+      custom_metric_kind: "DELTA"
+      custom_metric_type: "INT64"
+      alert_filter: 'metric.type="logging.googleapis.com/user/gcs-bucket/bucket-delete" AND resource.type="gcs_bucket" AND resource.label.project_id="your-project-id"'
+      alert_combiner: "OR"
+      alert_duration: "60s"
+      alert_threshold: "0"
+      alert_alignment: "60s"
+      alert_comparison: "COMPARISON_GT"
+      alert_aligner: "ALIGN_COUNT"
+      alert_doc: "Alert for NEDS GCS Bucket Deletion"
+      # You can now cleanly reference the display_name established above!
+      notification_channels: 
+        - "Cloud Analytics Support"
+        - "NEDS Support Channel"
+      finops_resource_type: "alert_policy"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"

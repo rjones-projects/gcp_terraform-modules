@@ -1,0 +1,60 @@
+project_id: "project_id"
+region: "gcp-region"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: 1.0.1
+  depends_on: []
+  spec:
+
+bigquery:
+  source:
+    version: v1.0.8
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "dataset_id"
+      friendly_name: "a_friendly_name"
+      description: "dataset_description"
+      location: "gcp-region"
+      delete_contents_on_destroy: false
+      cmek_key_name: "cmek_key"
+      finops_resource_type: "bq_dataset"
+      labels: 
+        vf_ngdi_data_product: null
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true
+      
+
+bigquery_table:
+  source:
+    version: v1.0.2
+  depends_on:
+    - finops_labels
+    - bigquery
+  spec:
+    - name: "table_one"
+      dataset_id: "dataset_id"
+      description: "table_description"
+      schema: "schema_json_string"
+      clustering: 
+        - "clustering_column"
+      deletion_protection: true
+      kms_key_name: "kms_key"
+      time_partitioning:
+        type: "MONTH"
+        field: "time_partitioning_column"
+        expiration_ms: 0
+      finops_resource_type: "bq_table"
+      labels: 
+        vf_ngdi_domain: "mob"
+        vf_cost_item: "ngdi" 
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true

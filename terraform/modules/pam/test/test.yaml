@@ -1,0 +1,72 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+pam:
+  source:
+    version: v1.1.0
+  depends_on: []
+  spec:
+    - entitlement_id: "test-entitlement-admin"
+      parent_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+      parent_type: "project"
+      organization_id: "123456789012"
+      grant_service_agent_permissions: false
+
+      entitlement_requesters:
+        - "user:test-requester@example.com"
+
+      entitlement_approvers:
+        - "user:test-approver@example.com"
+
+      entitlement_approval_notification_recipients: []
+      entitlement_pending_notification_recipients: []
+      entitlement_availability_notification_recipients: []
+
+      role_bindings:
+        - role: "roles/storage.admin"
+          condition_expression: null
+        - role: "roles/logging.viewer"
+          condition_expression: null
+
+    - entitlement_id: "test-entitlement-data"
+      parent_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+      parent_type: "project"
+      organization_id: "123456789012"
+      grant_service_agent_permissions: false
+
+      entitlement_requesters:
+        - "user:test-requester@example.com"
+
+      entitlement_approvers:
+        - "user:test-approver@example.com"
+
+      entitlement_approval_notification_recipients: []
+      entitlement_pending_notification_recipients: []
+      entitlement_availability_notification_recipients: []
+
+      role_bindings:
+        - role: "roles/bigquery.dataViewer"
+          condition_expression: null
+        - role: "roles/bigquery.jobUser"
+          condition_expression: null
+
+    - entitlement_id: "data-engineer"
+      parent_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+      parent_type: "project"
+      organization_id: "123456789012"
+      grant_service_agent_permissions: false
+
+      entitlement_requesters:
+        - "user:test-requester@example.com"
+
+      entitlement_approvers:
+        - "user:test-approver@example.com"
+
+      entitlement_approval_notification_recipients: []
+      entitlement_pending_notification_recipients: []
+      entitlement_availability_notification_recipients: []

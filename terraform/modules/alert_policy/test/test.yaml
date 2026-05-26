@@ -1,0 +1,117 @@
+project_id: "your-project-id"
+region: "europe-west2"
+env: "alpha"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on:
+  spec:
+
+# Assuming you wrap your notification_channel.tf into a standard module
+notification_channel:
+  source: 
+    version: v1.0.0
+  depends_on: []
+  spec:
+    - email_address: "cloud-analytics-team@vodafone.com"
+    - email_address: "neds-support@vodafone.com"
+
+alert_policy:
+  source: 
+    version: v1.0.0
+  depends_on:
+    - finops_labels
+    - notification_channel
+  spec:
+    # ---------------------------------------------------------
+    # Log-Based Metric Alerts (create_metric = true)
+    # ---------------------------------------------------------
+    - alert_name: "bucket_delete"
+      metric_name: "gcs-bucket/bucket-delete"
+      create_metric: true
+      custom_metric_filter: 'resource.type="gcs_bucket" AND protoPayload.methodName="storage.buckets.delete"'
+      custom_metric_kind: "DELTA"
+      custom_metric_type: "INT64"
+      alert_filter: 'metric.type="logging.googleapis.com/user/gcs-bucket/bucket-delete" AND resource.type="gcs_bucket" AND resource.label.project_id="your-project-id"'
+      alert_combiner: "OR"
+      alert_duration: "60s"
+      alert_threshold: "0"
+      alert_alignment: "60s"
+      alert_comparison: "COMPARISON_GT"
+      alert_aligner: "ALIGN_COUNT"
+      alert_doc: "Alert for NEDS GCS Bucket Deletion"
+      # Replace with the actual Notification Channel IDs generated or output references
+      notification_channels: 
+        - "projects/your-project-id/notificationChannels/123456789"
+      finops_resource_type: "alert_policy"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+
+    - alert_name: "gce_delete_instance"
+      metric_name: "gce_delete_instance_metric"
+      create_metric: true
+      custom_metric_filter: 'resource.type="gce_instance" AND protoPayload.methodName="v1.compute.instances.delete" AND protoPayload.resourceName !~ "cdap"'
+      custom_metric_kind: "DELTA"
+      custom_metric_type: "INT64"
+      alert_filter: 'metric.type="logging.googleapis.com/user/gce_delete_instance_metric" AND resource.type="gce_instance" AND resource.label.project_id="your-project-id" AND metadata.system_labels.name!=starts_with("cdap")'
+      alert_combiner: "OR"
+      alert_duration: "60s"
+      alert_threshold: "0"
+      alert_alignment: "60s"
+      alert_comparison: "COMPARISON_GT"
+      alert_doc: "Alert for NEDS Compute Engine Delete"
+      notification_channels: 
+        - "projects/your-project-id/notificationChannels/123456789"
+
+    - alert_name: "service_account_key_download"
+      metric_name: "service_account_key_download"
+      create_metric: true
+      custom_metric_filter: 'resource.type="service_account" AND protoPayload.methodName="google.iam.admin.v1.CreateServiceAccountKey"'
+      custom_metric_kind: "DELTA"
+      custom_metric_type: "INT64"
+      alert_filter: 'metric.type="logging.googleapis.com/user/service_account_key_download" AND resource.type="global" AND resource.label.project_id="your-project-id"'
+      alert_combiner: "OR"
+      alert_duration: "60s"
+      alert_threshold: "0"
+      alert_alignment: "60s"
+      alert_comparison: "COMPARISON_GT"
+      alert_aligner: "ALIGN_COUNT"
+      alert_doc: "Alert for Service Account Key Download"
+      notification_channels: 
+        - "projects/your-project-id/notificationChannels/123456789"
+
+    # ---------------------------------------------------------
+    # Standard Monitoring Metric Alerts (create_metric = false)
+    # ---------------------------------------------------------
+    - alert_name: "composer_health_alert"
+      create_metric: false
+      alert_filter: 'metric.type="composer.googleapis.com/environment/healthy" AND resource.type="cloud_composer_environment" AND resource.label.project_id="your-project-id"'
+      alert_combiner: "OR"
+      alert_duration: "600s"
+      alert_threshold: "0"
+      alert_alignment: "60s"
+      alert_comparison: "COMPARISON_LT"
+      alert_aligner: "ALIGN_FRACTION_TRUE"
+      alert_doc: "Alert for NEDS Composer Environment Health"
+      notification_channels: 
+        - "projects/your-project-id/notificationChannels/123456789"
+
+    - alert_name: "dataproc_completion_time"
+      create_metric: false
+      alert_filter: 'metric.type="dataproc.googleapis.com/cluster/job/completion_time" AND resource.type="cloud_dataproc_cluster" AND resource.label.project_id="your-project-id"'
+      alert_combiner: "OR"
+      alert_duration: "60s"
+      alert_threshold: "54000"
+      alert_alignment: "60s"
+      alert_comparison: "COMPARISON_GT"
+      alert_aligner: "ALIGN_PERCENTILE_99"
+      alert_doc: "Alert for NEDS Dataproc Completion Time"
+      notification_channels: 
+        - "projects/your-project-id/notificationChannels/123456789"

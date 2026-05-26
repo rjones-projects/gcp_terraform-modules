@@ -1,0 +1,26 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+service_agent_iam:
+  source:
+    version: v1.0.0
+  depends_on: []
+  spec:
+    - service: "storage.googleapis.com"
+      roles:
+        - "roles/pubsub.publisher"
+        
+    - service: "eventarc.googleapis.com"
+      roles:
+        - "roles/eventarc.eventReceiver"
+        - "roles/run.invoker"
+        
+    - service: "pubsub.googleapis.com"
+      roles:
+        - "roles/iam.serviceAccountTokenCreator"

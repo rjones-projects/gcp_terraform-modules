@@ -1,0 +1,28 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+cloud_build_private_worker_pool:
+  source:
+    version: v1.0.1
+  depends_on: #[google_service_networking_connection.worker_pool_conn]
+  spec:
+    - name: "test-pool"
+      worker_config: 
+        disk_size_gb: 100
+        machine_type: "e2-standard-4"
+        no_external_ip: false
+      network_config:
+        peered_network: "projects/vf-gned-ngdi-alpha-pltfrm-orch/global/networks/test-network"
+        peered_network_ip_range: "/29"
+    
+    - name: "test-pool2"
+      worker_config: 
+        disk_size_gb: 100
+        machine_type: "e2-standard-4"
+        no_external_ip: false
+

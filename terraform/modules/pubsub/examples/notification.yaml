@@ -1,0 +1,39 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec: []
+
+pubsub:
+  source:
+    version: v1.0.2
+  depends_on:
+    - finops_labels
+  spec:
+    - topic_name: "terraform-state-upload-events"
+      finops_resource_type: "pubsub"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_shared: "true"
+      notifications:
+        - bucket: "your-project-id-terraform-state"
+          event_types:
+            - "OBJECT_FINALIZE"
+          payload_format: "JSON_API_V1"
+      subscriptions:
+        - name: "terraform-state-upload-events-worker"
+          ack_deadline_seconds: 20
+          labels:
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_shared: "true"

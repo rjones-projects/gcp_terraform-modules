@@ -1,0 +1,45 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-central2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    verison: v1.0.2
+  depends_on: []
+  spec: []
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "ngdi-main"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-central2"
+      subnets:
+        - name: "ingress"
+          region: "europe-central2"
+          ip_cidr_range: "10.8.0.0/24"
+
+vpc_connector:
+  source: 
+    verison: v1.0.1
+  depends_on:
+    - network
+  spec:
+    - name: "ngdi-ingress-connector"
+      region: "europe-central2"
+      subnet_name: "ingress"
+      subnet_project_id: "fluent-drummer-468119-c3"
+      min_instances: 2
+      max_instances: 10
+      machine_type: "e2-micro"

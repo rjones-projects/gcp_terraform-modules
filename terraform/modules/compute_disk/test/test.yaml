@@ -1,0 +1,42 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+compute_disk:
+  source:
+    version: v1.0.0
+  depends_on:
+    - finops_labels
+  spec:
+    - name: test-disk
+      disk_type: "pd-standard"
+      zone: "europe-west2-a"
+      disk_size: 50
+      disk_encryption_key:
+        kms_key_url: "projects/vf-gned-ngdi-alpha-pltfrm-orch/locations/europe-west2/keyRings/keyring-vf-gned-ngdi-alpha-pltfrm-orch-europe-west2-gcs/cryptoKeys/cmek-vf-gned-ngdi-alpha-pltfrm-orch-europe-west2-compute_disk"
+      finops_resource_type: "compute"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_location: "europe-west2"
+    - name: test-disk2
+      disk_type: "pd-standard"
+      zone: "europe-west2-b"
+      disk_size: 50
+      finops_resource_type: "compute"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_location: "europe-west2"
+      resource_policies:
+        - "policy1"

@@ -1,0 +1,407 @@
+{
+  "displayName": "NGDI Composer Dashboard",
+    "gridLayout": {
+    "columns": 2,
+  "widgets": [
+    {
+      "title": "Health: Environment Health",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/healthy\" resource.type=\"cloud_composer_environment\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" resource.label.\"environment_name\"=\"ngdi-orch0-composer-env\" resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_COUNT_TRUE",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [
+                    "resource.label.\\"
+                  ],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "Health: Scheduler Heartbeat",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/scheduler_heartbeat_count\" resource.type=\"cloud_composer_environment\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" resource.label.\"environment_name\"=\"ngdi-orch0-composer-env\" resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [
+                    "resource.label.\\"
+                  ],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "Health: Web Server Health",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/web_server/health\" resource.type=\"cloud_composer_environment\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" resource.label.\"environment_name\"=\"ngdi-orch0-composer-env\" resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_COUNT_TRUE",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [
+                    "resource.label.\\"
+                  ],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "Health: Database Health",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/database_health\" resource.type=\"cloud_composer_environment\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" resource.label.\"environment_name\"=\"ngdi-orch0-composer-env\" resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_COUNT_TRUE",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [
+                    "resource.label.\\"
+                  ],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "FAILED DAG RUN",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/workflow/run_count\" resource.type=\"cloud_composer_workflow\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" metric.label.\"state\"=\"failed\" resource.label.\"location\"=\"europe-west3\" resource.label.\"workflow_name\"=monitoring.regex.full_match(\"ngdi-orch0-composer-env\\\\..*\")",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_DELTA",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "FAILED TASK",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/finished_task_instance_count\" resource.type=\"cloud_composer_environment\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" metric.label.\"state\"=\"failed\" resource.label.\"location\"=\"europe-west3\" resource.label.\"environment_name\"=\"ngdi-orch0-composer-env\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_DELTA",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "DATABASE CPU UTILIZATION",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/database/cpu/utilization\" resource.type=\"cloud_composer_environment\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "DATABASE DISK UTILIZATION",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/database/disk/utilization\" resource.type=\"cloud_composer_environment\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "DATABASE MEMORY UTILIZATION",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/database/memory/utilization\" resource.type=\"cloud_composer_environment\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "DAG FAILURE/SUCCESS",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/workflow/run_count\" resource.type=\"cloud_composer_workflow\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" metric.label.\"state\"=\"success\" resource.label.\"workflow_name\"=monitoring.regex.full_match(\"ngdi-orch0-composer-env\\\\..*\") resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_DELTA",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s",
+            "legendTemplate": "DAG run success"
+          },
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/workflow/run_count\" resource.type=\"cloud_composer_workflow\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" metric.label.\"state\"=\"failed\" resource.label.\"workflow_name\"=monitoring.regex.full_match(\"ngdi-orch0-composer-env\\\\..*\") resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_DELTA",
+                  "crossSeriesReducer": "REDUCE_SUM",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s",
+            "legendTemplate": "DAG run failure"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "ZOMBIE KILLED",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"composer.googleapis.com/environment/zombie_task_killed_count\" resource.type=\"cloud_composer_environment\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" resource.label.\"environment_name\"=\"ngdi-orch0-composer-env\" resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_DELTA",
+                  "crossSeriesReducer": "REDUCE_NONE",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s",
+            "legendTemplate": "DAG run failure"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    },
+    {
+      "title": "WORKFLOW RUN DURATION",
+      "xyChart": {
+        "dataSets": [
+          {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter":  "metric.type=\"composer.googleapis.com/workflow/run_duration\" resource.type=\"cloud_composer_workflow\" resource.label.\"project_id\"=\"vf-gned-ngdi-beta-orch\" resource.label.\"workflow_name\"=monitoring.regex.full_match(\"ngdi-orch0-composer-env\\\\..*\") resource.label.\"location\"=\"europe-west3\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "crossSeriesReducer": "REDUCE_PERCENTILE_50",
+                  "groupByFields": [],
+                  "alignmentPeriod": "60s"
+                }
+              }
+            },
+            "plotType": "STACKED_BAR",
+            "targetAxis": "Y1",
+            "minAlignmentPeriod": "60s"
+          }
+        ],
+        "chartOptions": {
+          "mode": "COLOR",
+          "displayHorizontal": false
+        },
+        "thresholds": [],
+        "yAxis": {
+          "scale": "LINEAR"
+        }
+      }
+    }
+  ]
+ }
+}

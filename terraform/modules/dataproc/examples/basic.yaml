@@ -1,0 +1,73 @@
+project_id: "project_id"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.3
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "main-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-central2"
+
+iam_service_account:
+  source:
+    version: v1.0.3
+  items:
+    - name: "dataproc-sa"
+      iam_project_roles:
+        "project_id": 
+          - "roles/dataproc.worker"
+          - "roles/composer.worker"
+
+dataproc:
+  source:
+    version: v1.0.3
+  depends_on: 
+    - iam_service_account 
+    - network
+  spec:
+    - name: "cluster-1" 
+      dataproc_config: 
+        cluster_config: 
+          
+          master_config: 
+            num_instances: 1
+            machine_type: "n1-standard-2"
+            disk_config: 
+              boot_disk_type: "pd-standard"
+              boot_disk_size_gb: 50
+              num_local_ssds: 0
+          
+          worker_config: 
+            num_instances: 2
+            machine_type: "n1-standard-2"
+            image_uri: "projects/cloud-dataproc/global/images/dataproc-2-2-deb12-20231205-195544-rc01" 
+            min_cpu_platform: "Intel Skylake"
+            disk_config: 
+              boot_disk_type: "pd-standard"
+              boot_disk_size_gb: 50
+              num_local_ssds: 0
+          
+          gce_cluster_config: 
+            internal_ip_only      : true
+            service_account       : SERVICE-ACCOUNT-EMAIL
+            service_account_scopes: ["cloud-platform"]
+            subnetwork            : NETWORK-NAME
+            tags                  : ["dataproc"]

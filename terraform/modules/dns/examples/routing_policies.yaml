@@ -1,0 +1,56 @@
+project_id: "PROJECT ID"
+region: "europe-west2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+dns:
+  source:
+    version: 1.0.0
+  depends_on: 
+    - network
+    - external_global_loadbalancer
+  spec:
+  - name: "routing_policies"
+    zone_config:
+      domain: "testing.com."
+      private: 
+        client_networks: 
+          - "projects/PROJECT_ID/global/networks/VPC_NAME"
+    recordsets:
+      "A regular": 
+        records:
+          - "10.20.0.1"
+      
+      "A geo1":
+        geo_routing:
+          - location: "europe-west1"
+            records:
+              - "10.0.0.1"
+          - location: "europe-west2"
+            records:
+              - "10.0.0.2"
+      
+      "A geo2":
+        geo_routing:
+          - location: "europe-west2"
+            health_checked_targets:
+              - load_balancer_type: "globalL7ilb"
+                ip_address: LB_IP_ADDRESS
+                port: "80"
+                ip_protocol: "tcp"
+                network_url: "projects/PROJECT_ID/global/networks/VPC_NAME"
+                project: PROJECT_ID
+   
+      "A wrr":
+        ttl: 600
+        wrr_routing:
+          - weight: 0.6
+            records:
+              - "10.10.0.1"
+          - weight: 0.2
+            records:
+              - "10.10.0.2"

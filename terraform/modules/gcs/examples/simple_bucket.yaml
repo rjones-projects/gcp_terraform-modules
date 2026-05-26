@@ -1,0 +1,28 @@
+project_id: "your-project-id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops-lables:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+gcs:
+  source:
+    version: v1.1.5
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "unique-bucket-name"
+      location: "europe-central2"
+      finops_resource_type: "gcs_bucket"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_data_layer: "raw"

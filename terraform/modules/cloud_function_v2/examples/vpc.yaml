@@ -1,0 +1,94 @@
+project_id: "project_id"
+region: "gcp-region"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+
+vpc_connector:
+  source:
+    version: v1.0.1
+  depends_on: []
+    spec:
+    - name: "ngdi-ingress-connector"
+      region: "gcp-region" 
+      subnet_name: "project_id-subnet-ingress"
+      subnet_project_id: "project-f22d6403-a27c-45fe-acb"
+      min_instances: 2
+      max_instances: 10
+      machine_type: "e2-micro"
+
+cloud_function_v2:
+  source:
+    version: v1.0.4
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "function-one"
+      location: "gcp-region" 
+      prefix: "prefix"
+      description: "function description"
+      kms_key: "projects/project_id/locations/region/keyRings/key_ring/cryptoKeys/crypto_key"
+      build_environment_variables:
+        BUILD_CONFIG_TEST: "build_test"
+      build_service_account: "projects/project_id/serviceAccounts/project_number-compute@domain.gserviceaccount.com"
+      service_account_email: "service_account@project_id.iam.gserviceaccount.com"
+      build_worker_pool: "projects/project_id/locations/gcp-region/workerPools/worker_pool"
+      docker_repository_id: "projects/project_id/locations/gcp-region/repositories/docker_repo"
+      bucket_name: "bucket_name"
+      bundle_path: "gs://bucket_name/bundle_name" 
+      bundle_name: "bundle_name"
+      environment_variables:
+        SERVICE_CONFIG_TEST: "config_test"
+      ingress_settings: "ALLOW_ALL"
+      vpc_connector:
+        name: "projects/project_id/locations/gcp-region/connectors/ngdi-ingress-connector"
+        egress_settings: "ALL_TRAFFIC"
+      secrets: 
+          "TEST_env":
+            is_volume: false
+            secret: "secret"
+            versions:
+              - "latest"
+          "/etc/secrets":
+            is_volume: true
+            secret: "secret"
+            versions: 
+              - "latest:secret"
+      finops_resource_type: "cloud_function"
+      labels: 
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: true
+        vf_ngdi_data_layer: "bronze"
+      iam:
+        roles/viewer:
+          special_groups:
+            - "allUsers"
+        roles/run.invoker:
+          groups:
+            - "example-group@googlegroups.com"
+          users:
+            - "user-name@example.com"
+      function_config:
+        entry_point: "entry_point"
+        instance_count: 1
+        memory_mb: 256
+        cpu: "0.166"
+        runtime: "python310"
+        timeout_seconds: 180
+        binary_authorization_policy: null
+      trigger_config:
+        event_type: "event_type"
+        pubsub_topic: "projects/project_id/topics/topic"
+        region: "europe-west2"
+        event_filters:
+        retry_policy: "RETRY_POLICY_DO_NOT_RETRY"
+        trigger_service_account_email: "service_account@project_id.iam.gserviceaccount.com"

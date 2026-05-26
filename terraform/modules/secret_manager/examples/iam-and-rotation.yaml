@@ -1,0 +1,28 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+secret_manager:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+    - secret_id: "oauth-client-secret"
+      replication_automatic: true
+      secret_data: "replace-me-oauth-secret"
+      rotation:
+        next_rotation_time: "2026-03-01T00:00:00Z"
+        rotation_period: "2592000s"
+      topics:
+        - "projects/terraform-test-project/topics/secret-events"
+      create_binding: true
+      members:
+        - "group:platform@example.com"
+      iam_bindings:
+        "roles/secretmanager.viewer":
+          - "serviceAccount:security-bot@terraform-test-project.iam.gserviceaccount.com"

@@ -1,0 +1,29 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+secret_manager:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+    - secret_id: "service-token"
+      replication_automatic: false
+      replicas:
+        - location: "europe-west2"
+        - location: "europe-central2"
+      secret_data: "replace-me-token"
+      labels:
+        app: "payments"
+        env: "staging"
+    - secret_id: "webhook-secret"
+      replication_automatic: false
+      replicas:
+        - location: "europe-west2"
+          customer_managed_encryption: "projects/terraform-test-project/locations/europe-west2/keyRings/app-ring/cryptoKeys/app-key"
+      generate_random_password: true

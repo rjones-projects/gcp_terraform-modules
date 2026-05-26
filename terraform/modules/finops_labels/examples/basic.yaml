@@ -1,0 +1,36 @@
+project_id: "example-project"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on:
+  spec:
+    - name: "project/default"
+      resource_type: "project"
+      resource_name: null
+      input_labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_owner: "platform-team@example.com"
+        vf_ngdi_shared: "false"
+        vf_ngdi_goal: "foundation"
+    - name: "gcs_bucket/my-bucket"
+      resource_type: "gcs_bucket"
+      resource_name: "my-bucket"
+      input_labels:
+        vf_ngdi_environment: "beta"
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_shared: "true"
+    - name: "bq_dataset/customer_signals"
+      resource_type: "bq_dataset"
+      resource_name: "customer_signals"
+      input_labels:
+        vf_ngdi_environment: "zeta-nl"
+        vf_ngdi_data_layer: "silver"
+        vf_ngdi_data_product: "cell"
+        vf_ngdi_shared: "false"

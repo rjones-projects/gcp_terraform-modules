@@ -1,0 +1,89 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source: "../../finops_labels"
+  depends_on: []
+  spec:
+
+kms:
+  source:
+    version: v2.0.0
+  depends_on:
+    - finops_labels
+  spec:
+    - keyring:
+        location: "europe-central2"
+        name: "test-keyring"
+      iam:
+        roles/cloudkms.admin:
+          - "group:kms-admins@example.com"
+      iam_bindings:
+        keyring-auditors:
+          role: "roles/cloudkms.viewer"
+          members:
+            - "group:kms-auditors@example.com"
+      iam_bindings_additive:
+        keyring-crypto-users:
+          role: "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+          member: "serviceAccount:kms-client@project_id.iam.gserviceaccount.com"
+      keys:
+        test-key-a:
+          rotation_period: "7776000s"
+          destroy_scheduled_duration: "2592000s"
+          finops_resource_type: "kms"
+          labels:
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_shared: true
+            vf_ngdi_goal: "encrypt-at-rest"
+            vf_ngdi_domain: "pltfrm"
+          iam:
+            roles/cloudkms.cryptoKeyEncrypterDecrypter:
+              - "serviceAccount:app-a@project_id.iam.gserviceaccount.com"
+          iam_bindings:
+            viewers-a:
+              role: "roles/cloudkms.viewer"
+              members:
+                - "group:security-a@example.com"
+              condition:
+                title: "temporary-access-a"
+                expression: "request.time < timestamp('2027-01-01T00:00:00Z')"
+          iam_bindings_additive:
+            additive-a:
+              role: "roles/cloudkms.cryptoKeyEncrypter"
+              member: "serviceAccount:worker-a@project_id.iam.gserviceaccount.com"
+        test-key-b:
+          rotation_period: "7776000s"
+          destroy_scheduled_duration: "2592000s"
+          finops_resource_type: "kms"
+          labels:
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_shared: true
+            vf_ngdi_goal: "encrypt-at-rest"
+            vf_ngdi_domain: "pltfrm"
+          iam_bindings:
+            viewers-b:
+              role: "roles/cloudkms.viewer"
+              members:
+                - "group:security-b@example.com"
+        test-key-c:
+          rotation_period: "7776000s"
+          destroy_scheduled_duration: "2592000s"
+          finops_resource_type: "kms"
+          labels:
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_shared: true
+            vf_ngdi_goal: "encrypt-at-rest"
+            vf_ngdi_domain: "pltfrm"
+          iam_bindings_additive:
+            additive-c:
+              role: "roles/cloudkms.cryptoKeyDecrypter"
+              member: "serviceAccount:worker-c@project_id.iam.gserviceaccount.com"

@@ -1,0 +1,44 @@
+project_id: "project_id"
+region: "europe-west1"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec: []
+
+external_global_address:
+  source:
+    version: v1.0.2
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "lb-frontend-ip"
+      finops_resource_type: "networking"
+      description: "Reserved for frontend HTTP(S) load balancer"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        role: "frontend"
+    - name: "lb-backend-ip"
+      finops_resource_type: "networking"
+      description: "Reserved for backend services"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        role: "backend"
+    - name: "egress-nat-ip"
+      finops_resource_type: "networking"
+      description: "Reserved for Cloud NAT egress"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        role: "nat"

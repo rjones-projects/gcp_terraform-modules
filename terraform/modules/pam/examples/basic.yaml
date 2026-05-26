@@ -1,0 +1,66 @@
+project_id: "project_id"
+region: "europe-central2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+pam:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec:
+    - entitlement_id: "example-entitlement-project-admin"
+      parent_id: "your-project-id"
+      parent_type: "project"          # One of: organization | folder | project
+      organization_id: "123456789012" # Required if grant_service_agent_permissions = true
+      grant_service_agent_permissions: true
+
+      entitlement_requesters:
+        - "serviceAccount:sa-1@your-project-id.iam.gserviceaccount.com"
+        - "group:devs@example.com"
+
+      entitlement_approvers:
+        - "user:approver1@example.com"
+        - "group:security@example.com"
+
+      entitlement_approval_notification_recipients:
+        - "pam-approvals@example.com"
+
+      entitlement_pending_notification_recipients:
+        - "pam-pending@example.com"
+
+      entitlement_availability_notification_recipients:
+        - "pam-availability@example.com"
+
+      max_request_duration_hours: 2
+      auto_approve_entitlement: false
+      requester_justification: true
+      require_approver_justification: true
+
+      role_bindings:
+        - role: "roles/storage.admin"
+          condition_expression: "request.time < timestamp(\"2026-12-31T23:59:59Z\")"
+
+    - entitlement_id: "example-entitlement-project-data"
+      parent_id: "your-project-id"
+      parent_type: "project"
+      organization_id: "123456789012"
+      grant_service_agent_permissions: true
+
+      entitlement_requesters:
+        - "serviceAccount:sa-2@your-project-id.iam.gserviceaccount.com"
+
+      entitlement_approvers:
+        - "user:data-approver@example.com"
+
+      max_request_duration_hours: 4
+      auto_approve_entitlement: false
+      requester_justification: true
+      require_approver_justification: true
+
+      role_bindings:
+        - role: "roles/bigquery.dataViewer"
+        - role: "roles/bigquery.jobUser"
+
