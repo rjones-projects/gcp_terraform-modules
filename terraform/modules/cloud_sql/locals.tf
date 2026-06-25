@@ -43,5 +43,5 @@ locals {
     }
   ]
 
-
+  Password="securePassword123!"
 }
