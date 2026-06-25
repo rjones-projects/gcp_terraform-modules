@@ -63,39 +63,84 @@ def get_diff() -> str:
 
 def parse_diff(raw_diff: str) -> list[dict]:
     """
-    Returns a list of dicts:
-      { path, diff, hunk_map }
-    hunk_map maps new_line_number -> diff_position (for GitHub inline comments).
+    Returns a list of dicts: { path, diff, hunk_map, added_lines }
+
+    hunk_map:    new_line_number -> diff_position
+                 Position is 1-based, counts every line in the file's diff
+                 section (index/---/+++ headers + @@ lines + content lines).
+                 This matches what GitHub's POST /reviews API expects.
+
+    added_lines: set of new file line numbers that are additions (+),
+                 used to validate that Claude only comments on added lines.
     """
-    files = []
+    files: list[dict] = []
     current: dict | None = None
     diff_position   = 0
     new_line_number = 0
 
-    for line in raw_diff.splitlines(keepends=True):
+    for raw_line in raw_diff.splitlines(keepends=True):
+        line = raw_line.rstrip("\n")
+
+        # ── New file section ──────────────────────────────────────────────
         if line.startswith("diff --git "):
-            if current:
+            if current is not None:
                 files.append(current)
             match = re.search(r' b/(.+)$', line)
-            path = match.group(1) if match else "unknown"
-            current = {"path": path, "diff": "", "hunk_map": {}}
-            diff_position = 0
+            path = match.group(1).strip() if match else "unknown"
+            current = {
+                "path":        path,
+                "diff":        "",
+                "hunk_map":    {},   # new_lineno -> diff_position
+                "added_lines": set(),
+            }
+            diff_position   = 0
+            new_line_number = 0
+            # The "diff --git" line itself is NOT counted in position
+            continue
 
-        elif line.startswith("@@"):
-            # e.g. @@ -10,7 +10,9 @@
-            match = re.search(r'\+(\d+)', line)
-            new_line_number = int(match.group(1)) if match else 1
-            if current:
-                diff_position += 1
-                current["diff"] += line
-        elif current is not None:
+        if current is None:
+            continue
+
+        # ── File header lines (index / --- / +++) ────────────────────────
+        if (line.startswith("index ")
+                or line.startswith("--- ")
+                or line.startswith("+++ ")
+                or line.startswith("new file")
+                or line.startswith("deleted file")
+                or line.startswith("rename ")):
             diff_position += 1
-            if not line.startswith("-"):
-                current["hunk_map"][new_line_number] = diff_position
-                new_line_number += 1
-            current["diff"] += line
+            current["diff"] += raw_line
+            continue
 
-    if current:
+        # ── Hunk header ───────────────────────────────────────────────────
+        if line.startswith("@@"):
+            match = re.search(r'\+(\d+)(?:,(\d+))?', line)
+            if match:
+                new_line_number = int(match.group(1))
+                # If the hunk starts at line 0 it means empty file — treat as 1
+                if new_line_number == 0:
+                    new_line_number = 1
+            diff_position += 1
+            current["hunk_map"][new_line_number] = diff_position
+            current["diff"] += raw_line
+            continue
+
+        # ── Content lines ─────────────────────────────────────────────────
+        diff_position += 1
+        current["diff"] += raw_line
+
+        if line.startswith("+"):
+            current["hunk_map"][new_line_number] = diff_position
+            current["added_lines"].add(new_line_number)
+            new_line_number += 1
+        elif line.startswith("-"):
+            pass  # deleted line: old side only, don't advance new_line_number
+        else:
+            # Context line
+            current["hunk_map"][new_line_number] = diff_position
+            new_line_number += 1
+
+    if current is not None:
         files.append(current)
 
     return files
@@ -170,31 +215,44 @@ def post_review(pr, file_reviews: list[dict]) -> None:
     file_summaries  = []
 
     for item in file_reviews:
-        file      = item["file"]
-        result    = item["result"]
-        hunk_map  = file["hunk_map"]
-        path      = file["path"]
+        file        = item["file"]
+        result      = item["result"]
+        hunk_map    = file["hunk_map"]
+        added_lines = file["added_lines"]
+        path        = file["path"]
 
         if result.get("summary"):
             file_summaries.append(f"**`{path}`** — {result['summary']}")
 
         for comment in result.get("comments", []):
             line = comment.get("line")
-            pos  = hunk_map.get(line)
+            if not isinstance(line, int):
+                print(f"  [skip] {path}:{line} — not an integer, skipping", file=sys.stderr)
+                continue
+
+            # Prefer the exact line; fall back to nearest added line >= requested
+            pos = hunk_map.get(line)
             if pos is None:
-                # Try nearest available line
-                candidates = [l for l in hunk_map if l >= line]
+                candidates = sorted(l for l in hunk_map if l >= line)
                 if candidates:
-                    line = min(candidates)
+                    line = candidates[0]
                     pos  = hunk_map[line]
                 else:
-                    continue   # can't place this comment
+                    # last resort: nearest line before
+                    candidates = sorted((l for l in hunk_map if l < line), reverse=True)
+                    if candidates:
+                        line = candidates[0]
+                        pos  = hunk_map[line]
+                    else:
+                        print(f"  [skip] {path}:{line} — no diff position found", file=sys.stderr)
+                        continue
 
             severity_icon = {"error": "🔴", "warning": "🟡", "suggestion": "🔵"}.get(
                 comment.get("severity", "suggestion"), "🔵"
             )
             body = f"{severity_icon} **{comment.get('severity', 'suggestion').capitalize()}**\n\n{comment['body']}"
 
+            print(f"  [comment] {path}:{line} pos={pos} ({comment.get('severity')})")
             review_comments.append({
                 "path":     path,
                 "position": pos,
@@ -209,7 +267,6 @@ def post_review(pr, file_reviews: list[dict]) -> None:
     if not review_comments:
         overall_body += "_No issues found. Looks good! ✅_"
 
-    # Choose event type: REQUEST_CHANGES if any errors, else COMMENT
     has_errors = any(
         c.get("severity") == "error"
         for item in file_reviews
@@ -217,12 +274,20 @@ def post_review(pr, file_reviews: list[dict]) -> None:
     )
     event = "REQUEST_CHANGES" if has_errors else "COMMENT"
 
-    pr.create_review(
-        body=overall_body,
-        event=event,
-        comments=review_comments,
-    )
-    print(f"Review posted ({event}) with {len(review_comments)} inline comment(s).")
+    try:
+        pr.create_review(
+            body=overall_body,
+            event=event,
+            comments=review_comments,
+        )
+        print(f"Review posted ({event}) with {len(review_comments)} inline comment(s).")
+    except Exception as exc:
+        # If inline comments fail, fall back to a plain summary comment
+        print(f"  [warn] create_review failed: {exc}", file=sys.stderr)
+        print("  Falling back to plain PR comment.", file=sys.stderr)
+        fallback = overall_body + "\n\n> ⚠️ _Inline comments could not be posted; showing summary only._"
+        pr.create_issue_comment(fallback)
+        print("Fallback comment posted.")
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
