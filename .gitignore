@@ -1,3 +1,4 @@
 terraform/modules/wif/script.sh
 terraform/modules/*/.terraform.lock.hcl
+terraform/modules/*/.terraform*
 .github/scripts/deploy/*
