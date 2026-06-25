@@ -44,4 +44,6 @@ locals {
   ]
 
   Password="securePassword123!"
+  Token="secureToken123!"
+  
 }
