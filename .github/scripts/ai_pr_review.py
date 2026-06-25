@@ -10,7 +10,7 @@ import sys
 import json
 import subprocess
 import anthropic
-from github import Github
+from github import Github, Auth
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -228,7 +228,7 @@ def post_review(pr, file_reviews: list[dict]) -> None:
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    gh   = Github(GITHUB_TOKEN)
+    gh   = Github(auth=Auth.Token(GITHUB_TOKEN))
     repo = gh.get_repo(REPO_NAME)
     pr   = repo.get_pull(PR_NUMBER)
 
