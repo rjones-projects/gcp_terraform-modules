@@ -42,8 +42,5 @@ locals {
       input_labels  = cloud_sql_configuration.labels
     }
   ]
-
-  Password="securePassword123!"
-  Token="secureToken123!"
   
 }

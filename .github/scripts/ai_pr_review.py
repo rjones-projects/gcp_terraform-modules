@@ -227,36 +227,38 @@ def post_review(pr, file_reviews: list[dict]) -> None:
         for comment in result.get("comments", []):
             line = comment.get("line")
             if not isinstance(line, int):
-                print(f"  [skip] {path}:{line} — not an integer, skipping", file=sys.stderr)
+                print(f"  [skip] {path}:{line} — not an integer", file=sys.stderr)
                 continue
 
-            # Prefer the exact line; fall back to nearest added line >= requested
+            # 1. Enforce added_lines guard: only comment on + lines.
+            #    Snap to nearest added line so GitHub will accept the position.
+            if line not in added_lines:
+                candidates = sorted(l for l in added_lines if l >= line)
+                if not candidates:
+                    candidates = sorted((l for l in added_lines if l < line), reverse=True)
+                if candidates:
+                    snapped = candidates[0]
+                    print(f"  [snap] {path}:{line} → {snapped} (not an added line)", file=sys.stderr)
+                    line = snapped
+                else:
+                    print(f"  [skip] {path}:{line} — no added lines to snap to", file=sys.stderr)
+                    continue
+
             pos = hunk_map.get(line)
             if pos is None:
-                candidates = sorted(l for l in hunk_map if l >= line)
-                if candidates:
-                    line = candidates[0]
-                    pos  = hunk_map[line]
-                else:
-                    # last resort: nearest line before
-                    candidates = sorted((l for l in hunk_map if l < line), reverse=True)
-                    if candidates:
-                        line = candidates[0]
-                        pos  = hunk_map[line]
-                    else:
-                        print(f"  [skip] {path}:{line} — no diff position found", file=sys.stderr)
-                        continue
+                print(f"  [skip] {path}:{line} — no diff position found", file=sys.stderr)
+                continue
 
-            severity_icon = {"error": "🔴", "warning": "🟡", "suggestion": "🔵"}.get(
-                comment.get("severity", "suggestion"), "🔵"
-            )
-            body = f"{severity_icon} **{comment.get('severity', 'suggestion').capitalize()}**\n\n{comment['body']}"
+            severity      = comment.get("severity", "suggestion")
+            severity_icon = {"error": "🔴", "warning": "🟡", "suggestion": "🔵"}.get(severity, "🔵")
+            body          = f"{severity_icon} **{severity.capitalize()}**\n\n{comment['body']}"
 
-            print(f"  [comment] {path}:{line} pos={pos} ({comment.get('severity')})")
+            print(f"  [comment] {path}:{line} pos={pos} ({severity})")
             review_comments.append({
-                "path":     path,
-                "position": pos,
-                "body":     body,
+                "path":      path,
+                "position":  pos,
+                "body":      body,
+                "_severity": severity,  # internal; stripped before API call
             })
 
     overall_body = "## 🤖 Claude AI Review\n\n"
@@ -267,23 +269,29 @@ def post_review(pr, file_reviews: list[dict]) -> None:
     if not review_comments:
         overall_body += "_No issues found. Looks good! ✅_"
 
-    has_errors = any(
-        c.get("severity") == "error"
-        for item in file_reviews
-        for c in item["result"].get("comments", [])
-    )
-    event = "REQUEST_CHANGES" if has_errors else "COMMENT"
+    # 2. Base has_errors only on comments that were actually posted,
+    #    not all raw Claude output (some may have been skipped/snapped away).
+    has_errors = any(c["_severity"] == "error" for c in review_comments)
+    event      = "REQUEST_CHANGES" if has_errors else "COMMENT"
 
+    # Strip internal keys before sending to GitHub API
+    api_comments = [
+        {k: v for k, v in c.items() if not k.startswith("_")}
+        for c in review_comments
+    ]
+
+    # 3. Narrow exception: only catch GithubException so unexpected errors
+    #    still fail loudly and surface in the Actions log.
+    from github import GithubException
     try:
         pr.create_review(
             body=overall_body,
             event=event,
-            comments=review_comments,
+            comments=api_comments,
         )
-        print(f"Review posted ({event}) with {len(review_comments)} inline comment(s).")
-    except Exception as exc:
-        # If inline comments fail, fall back to a plain summary comment
-        print(f"  [warn] create_review failed: {exc}", file=sys.stderr)
+        print(f"Review posted ({event}) with {len(api_comments)} inline comment(s).")
+    except GithubException as exc:
+        print(f"  [warn] create_review failed ({exc.status}): {exc.data}", file=sys.stderr)
         print("  Falling back to plain PR comment.", file=sys.stderr)
         fallback = overall_body + "\n\n> ⚠️ _Inline comments could not be posted; showing summary only._"
         pr.create_issue_comment(fallback)
