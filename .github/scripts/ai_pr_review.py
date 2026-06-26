@@ -10,7 +10,7 @@ import sys
 import json
 import subprocess
 import anthropic
-from github import Github, Auth
+from github import Github, Auth, GithubException
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -121,7 +121,8 @@ def parse_diff(raw_diff: str) -> list[dict]:
                 if new_line_number == 0:
                     new_line_number = 1
             diff_position += 1
-            current["hunk_map"][new_line_number] = diff_position
+            # Do NOT add @@ to hunk_map: it's not a content line and GitHub
+            # will reject a comment position that points at a hunk header.
             current["diff"] += raw_line
             continue
 
@@ -231,18 +232,20 @@ def post_review(pr, file_reviews: list[dict]) -> None:
                 continue
 
             # 1. Enforce added_lines guard: only comment on + lines.
-            #    Snap to nearest added line so GitHub will accept the position.
+            #    Snap direction: prefer the nearest added line BEFORE the
+            #    target (same logical block), fall forward only if nothing precedes.
             if line not in added_lines:
-                candidates = sorted(l for l in added_lines if l >= line)
-                if not candidates:
-                    candidates = sorted((l for l in added_lines if l < line), reverse=True)
-                if candidates:
-                    snapped = candidates[0]
-                    print(f"  [snap] {path}:{line} → {snapped} (not an added line)", file=sys.stderr)
-                    line = snapped
+                before = sorted((l for l in added_lines if l < line), reverse=True)
+                after  = sorted(l for l in added_lines if l > line)
+                if before:
+                    snapped = before[0]
+                elif after:
+                    snapped = after[0]
                 else:
                     print(f"  [skip] {path}:{line} — no added lines to snap to", file=sys.stderr)
                     continue
+                print(f"  [snap] {path}:{line} → {snapped} (not an added line)", file=sys.stderr)
+                line = snapped
 
             pos = hunk_map.get(line)
             if pos is None:
@@ -280,9 +283,8 @@ def post_review(pr, file_reviews: list[dict]) -> None:
         for c in review_comments
     ]
 
-    # 3. Narrow exception: only catch GithubException so unexpected errors
-    #    still fail loudly and surface in the Actions log.
-    from github import GithubException
+    # 3. Narrow exception: fall back to plain comment only on 422 (position
+    #    errors). Re-raise anything else so the job fails loudly.
     try:
         pr.create_review(
             body=overall_body,
@@ -291,11 +293,14 @@ def post_review(pr, file_reviews: list[dict]) -> None:
         )
         print(f"Review posted ({event}) with {len(api_comments)} inline comment(s).")
     except GithubException as exc:
-        print(f"  [warn] create_review failed ({exc.status}): {exc.data}", file=sys.stderr)
-        print("  Falling back to plain PR comment.", file=sys.stderr)
-        fallback = overall_body + "\n\n> ⚠️ _Inline comments could not be posted; showing summary only._"
-        pr.create_issue_comment(fallback)
-        print("Fallback comment posted.")
+        if exc.status == 422:
+            print(f"  [warn] create_review 422: {exc.data}", file=sys.stderr)
+            print("  Falling back to plain PR comment.", file=sys.stderr)
+            fallback = overall_body + "\n\n> ⚠️ _Inline comments could not be posted; showing summary only._"
+            pr.create_issue_comment(fallback)
+            print("Fallback comment posted.")
+        else:
+            raise
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
