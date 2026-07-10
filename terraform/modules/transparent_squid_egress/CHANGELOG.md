@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-06-05
+### Fixed
+- Changed naming convention of compute routes to avoid issues with character limits 
+
 ## [1.0.1] - 2026-05-01
 ### Added
 - Added firewall functionality to the module, removing need to declare firewall module in YAML

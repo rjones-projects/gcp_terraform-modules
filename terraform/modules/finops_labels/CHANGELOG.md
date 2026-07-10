@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2025-02-27
+### Added
+- Added option to overwrite default vf_ngdi_resource_name when setting labels
+
 ## [1.0.4] - 2025-02-27
 ### Added
 - test.yaml

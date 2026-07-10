@@ -9,7 +9,7 @@ terraform:
 
 artifact_registry:
   source:
-    version: v1.0.4
+    version: v1.0.6
   spec:
     - name: "my-new-artifact-repo"
       format: 

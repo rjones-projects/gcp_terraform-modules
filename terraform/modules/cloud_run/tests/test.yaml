@@ -20,13 +20,28 @@ project_services:
 
 cloud_run:
   source:
-    version: v1.0.1
+    version: v1.0.3
   depends_on:
     - project_services
   spec:
-    - name: "test-cloud-run"
+    - name: "test-cloud-run-2"
       type: "SERVICE"
-      deletion_protection: false
       containers:
-        app:
+        turing-processor:
           image: "europe-west1-docker.pkg.dev/vf-gned-ngdi-alpha-pltfrm-orch/cloud-run-source-deploy/test-cloud-run:latest"
+          options: 
+            command: null
+            args: null        
+          ports: 
+            "http1": 
+              container_port: 8080  
+          resources: 
+            limits: 
+              cpu: 4
+              memory: 8Gi           
+      iam:
+        roles/run.invoker:
+          - serviceAccount:turing-batch-sa@vf-gned-ngdi-mob-beta-ing.iam.gserviceaccount.com
+      service_account_config:
+        create: false
+        email: turing-batch-sa@vf-gned-ngdi-mob-beta-ing.iam.gserviceaccount.com

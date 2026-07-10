@@ -23,4 +23,4 @@ dashboard_bq:
   depends_on:
     - project_services
   spec:
-    enable_bq_dashabord: true
+    enable_bq_dashboard: true

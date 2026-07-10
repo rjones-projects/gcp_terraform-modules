@@ -8,21 +8,64 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.1
+    version: v1.0.5
   depends_on: []
   spec:
 
 gcs:
   source:
-    version: v1.1.4
+    version: v1.1.10
   depends_on:
     - finops_labels
   spec:
-    - name: "a-unique-bucket-name"
+    - name: "test1"
       location: "gcp-region"
+      public_access_prevention: inherited
+      kms_key_name: "my-kms-key"
       finops_resource_type: "gcs_bucket"
       labels:
         vf_ngdi_environment: "alpha"
         vf_ngdi_shared: "true"
         vf_ngdi_data_layer: "raw"
-      
+    
+    - name: "test2"
+      location: europe-west3
+      autoclass: true
+      kms_key_name: "my-kms-key"
+      finops_resource_type: gcs_bucket
+      labels:
+        vf_ngdi_environment: alpha
+        vf_ngdi_domain: mob 
+        vf_cost_item: ngdi
+        vf_ngdi_shared: 'true' 
+        vf_ngdi_data_layer: raw 
+      iam_bindings_additive:
+        "storage-admin-with-delegated_roles":
+          role: "roles/storage.admin"
+          member: "serviceAccount:dataproc-custom-sa@vf-gned-ngdi-mob-beta-ing.iam.gserviceaccount.com"
+        "storage-admin-upm": 
+          role: "roles/storage.admin"
+          member: "group:gcp-vf-grp-ngdi-all-mob-upm-3-0-data-access@vodafone.com"
+    
+    - name: "test3"
+      location: europe-west3
+      autoclass: true
+      public_access_prevention: test
+      kms_key_name: "my-kms-key"
+      finops_resource_type: gcs_bucket
+      labels:
+        vf_ngdi_resource_name: "test-label"
+        vf_ngdi_environment: alpha
+        vf_ngdi_domain: mob 
+        vf_cost_item: ngdi
+        vf_ngdi_shared: 'true' 
+        vf_ngdi_data_layer: raw 
+      iam_bindings:
+        "storage-admin-with-delegated_roles":
+          role: "roles/storage.admin"
+          members: 
+            - "serviceAccount:dataproc-custom-sa@vf-gned-ngdi-mob-beta-ing.iam.gserviceaccount.com"
+        "storage-admin-upm": 
+          role: "roles/storage.admin"
+          members: 
+            - "group:gcp-vf-grp-ngdi-all-mob-upm-3-0-data-access@vodafone.com"

@@ -31,9 +31,9 @@ resource "google_compute_network" "vpc_network" {
     "${local.common_resource_id}-vpc"
   )
   project                 = local.project_id
-  auto_create_subnetworks = local.auto_create_subnetworks
   routing_mode            = local.routing_mode
   description             = local.description
+  auto_create_subnetworks = false
 }
 
 resource "google_compute_router" "router" {
@@ -87,15 +87,17 @@ resource "google_compute_router_nat" "router_nat" {
   }
 }
 
-# checkov:skip=CKV_GCP_74: Private Google Access is intentionally configurable per subnet
 resource "google_compute_subnetwork" "subnets" {
-  for_each                 = { for subnet in local.subnets : subnet.name => subnet }
-  project                  = local.project_id
-  name                     = "${local.common_resource_id}-subnet-${each.value.name}"
-  network                  = google_compute_network.vpc_network.name
-  region                   = coalesce(each.value.region, local.region)
-  private_ip_google_access = true
-  ip_cidr_range            = each.value.ip_cidr_range
+  # checkov:skip=CKV_GCP_74: Private Google Access is set per subnet via enable_private_access (legacy subnets may disable it).
+  for_each                         = { for subnet in local.subnets : subnet.name => subnet }
+  project                          = local.project_id
+  name                             = coalesce(each.value.custom_subnet_name, "${local.common_resource_id}-subnet-${each.value.name}")
+  network                          = google_compute_network.vpc_network.self_link
+  region                           = coalesce(each.value.region, local.region)
+  description                      = try(each.value.description, "Terraform-managed.")
+  private_ip_google_access         = coalesce(each.value.enable_private_access, true) # checkov:skip=CKV_GCP_74
+  ip_cidr_range                    = each.value.ip_cidr_range
+  send_secondary_ip_range_if_empty = each.value.send_secondary_ip_range_if_empty
 
   dynamic "secondary_ip_range" {
     for_each = each.value.secondary_ip_ranges
@@ -110,4 +112,26 @@ resource "google_compute_subnetwork" "subnets" {
     flow_sampling        = try(each.value.flow_logs_config.flow_sampling, 1)
     metadata             = try(each.value.flow_logs_config.metadata, "INCLUDE_ALL_METADATA")
   }
+}
+
+resource "google_compute_route" "gcp_health_check_1" {
+  count            = local.ingress_health_check ? 1 : 0
+  project          = local.project_id
+  name             = "${google_compute_network.vpc_network.name}-gcp-hc-1"
+  network          = google_compute_network.vpc_network.name
+  dest_range       = "35.191.0.0/16"
+  next_hop_gateway = "default-internet-gateway"
+  priority         = 500
+  description      = "Route GCP health check return traffic directly to default internet gateway"
+}
+
+resource "google_compute_route" "gcp_health_check_2" {
+  count            = local.ingress_health_check ? 1 : 0
+  project          = local.project_id
+  name             = "${google_compute_network.vpc_network.name}-gcp-hc-2"
+  network          = google_compute_network.vpc_network.name
+  dest_range       = "130.211.0.0/22"
+  next_hop_gateway = "default-internet-gateway"
+  priority         = 500
+  description      = "Route GCP health check return traffic directly to default internet gateway"
 }

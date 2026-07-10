@@ -1,0 +1,23 @@
+project_id: "project_id"
+region: "europe-west3"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+vpc_peering:
+  source:
+    version: v1.0.0
+  depends_on: []
+  spec:
+    - name: "peering-to-hub"
+      prefix: "ngdi"
+      local_network: "projects/project_id/global/networks/my-vpc"
+      peer_network: "projects/shared-hub/global/networks/hub-vpc"
+      peer_create_peering: false
+    - name: "peering-to-runners"
+      prefix: "ngdi"
+      local_network: "projects/project_id/global/networks/my-vpc"
+      peer_network: "projects/vf-nwp-cntr-nonlive/global/networks/runner-vpc"
+      peer_create_peering: false

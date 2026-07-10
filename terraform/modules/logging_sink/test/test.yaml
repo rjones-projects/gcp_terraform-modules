@@ -1,0 +1,25 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+logging_sink:
+  source:
+    versions: v1.0.1
+  depends_on: []
+  spec:
+    # Example 1: BigQuery Sink using the 'dataset_id' shorthand
+    - name: "turing-batch-logs-sink"
+      description: "Turing Batch pipeline logs to BigQuery"
+      destination: "turing_metrics"
+      filter: "resource.type=cloud_run_revision AND resource.labels.service_name=turing-data-processor"
+      dataset_id: "test_dataset"
+
+    # Example 2: Cloud Storage Sink using the full 'destination' URI
+    - name: "alpha-gcs-error-sink"
+      description: "Archive all error logs to GCS bucket"
+      destination: "storage.googleapis.com/vf-gned-ngdi-alpha-error-archive"
+      filter: "severity >= ERROR"

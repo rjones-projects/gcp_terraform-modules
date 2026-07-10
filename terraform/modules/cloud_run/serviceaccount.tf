@@ -1,17 +1,13 @@
 locals {
+  service_account = local.cloud_run_spec.service_account_config
+
   service_account_email = (
-    var.service_account_config.create
-    ? google_service_account.service_account[0].email  # use managed SA, when creating
-    : (var.service_account_config.email == null ? null # set to null, if no email provided
-      : lookup(                                        # lookup SA in context
-        local.ctx.iam_principals,
-        var.service_account_config.email,
-        var.service_account_config.email
-      )
-    )
-  )
+    try(local.service_account.create, var.service_account_config.create)
+    ? google_service_account.service_account[0].email                                      # use managed SA, when creating
+    : (try(local.service_account.email, null) == null ? null : local.service_account.email # set to null, if no email provided
+  ))
   service_account_roles = [
-    for role in var.service_account_config.roles
+    for role in try(local.service_account.roles, var.service_account_config.roles)
     : lookup(local.ctx.custom_roles, role, role)
   ]
 }
@@ -19,17 +15,17 @@ locals {
 resource "google_service_account" "service_account" {
   count      = var.service_account_config.create ? 1 : 0
   project    = local.project_id
-  account_id = coalesce(var.service_account_config.name, local.name)
+  account_id = try(local.service_account.name, local.name)
   display_name = coalesce(
-    var.service_account_config.display_name,
-    var.service_account_config.name,
+    try(local.service_account.display_name, var.service_account_config.display_name),
+    try(local.service_account.name, var.service_account_config.name),
     local.name
   )
 }
 
 resource "google_project_iam_member" "default" {
   for_each = (
-    var.service_account_config.create
+    try(local.service_account.create, var.service_account_config.create)
     ? toset(local.service_account_roles)
     : toset([])
   )

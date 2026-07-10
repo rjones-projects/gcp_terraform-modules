@@ -60,6 +60,7 @@ locals {
     iam                   = function.iam
     function_config       = function.function_config
     trigger_config        = function.trigger_config
+    is_http_trigger       = try(function.trigger_config.http, false) == true
     finops_resource_type  = function.finops_resource_type
     labels                = function.labels
     }

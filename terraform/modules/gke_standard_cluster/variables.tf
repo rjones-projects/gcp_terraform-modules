@@ -12,18 +12,26 @@ variable "gke_standard_cluster" {
 variable "gke_standard_cluster_default" {
   description = "a gke standard cluster object to be merged into"
   type = object({
-    service_name                         = string
-    zone                                 = string
-    deletion_protection                  = bool
-    network_name                         = string
-    subnet_name                          = string
-    labels                               = map(string)
-    enable_shielded_nodes                = bool
-    datapath_provider                    = string
-    gke_master_cidr                      = string
-    pods_cidr                            = string
-    services_cidr                        = string
-    management_zone_cidr_range           = string
+    service_name               = string
+    zone                       = string
+    deletion_protection        = bool
+    network_name               = string
+    subnet_name                = string
+    labels                     = map(string)
+    enable_shielded_nodes      = bool
+    datapath_provider          = string
+    gke_master_cidr            = string
+    pods_cidr                  = string
+    services_cidr              = string
+    management_zone_cidr_range = string
+    master_authorized_networks = optional(list(object({
+      display_name = string
+      cidr_block   = string
+    })), [])
+    enable_dns_endpoint                  = optional(bool, false)
+    dns_endpoint_allow_external_traffic  = optional(bool, false)
+    enable_k8s_tokens_via_dns            = optional(bool, false)
+    enable_k8s_certs_via_dns             = optional(bool, false)
     release_channel                      = string
     kubernetes_version                   = string
     monitoring_enabled_components        = list(string)
@@ -55,14 +63,22 @@ variable "gke_standard_cluster_default" {
     security_posture_mode               = string
     security_posture_vulnerability_mode = string
     enable_gateway_api                  = bool
-    maintenance_start_time              = string
-    initial_node_count                  = number
-    enable_intranode_visibility         = bool
-    cmek_key_id                         = string
-    gpu_type                            = string
-    gpu_count                           = number
-    autoscaling_min_node_count          = number
-    autoscaling_max_node_count          = number
+    enable_secret_manager_addon         = bool
+    secret_sync_config = object({
+      enabled = bool
+      rotation_config = optional(object({
+        enabled           = optional(bool)
+        rotation_interval = optional(string)
+      }))
+    })
+    maintenance_start_time      = string
+    initial_node_count          = number
+    enable_intranode_visibility = bool
+    cmek_key_id                 = string
+    gpu_type                    = string
+    gpu_count                   = number
+    autoscaling_min_node_count  = number
+    autoscaling_max_node_count  = number
   })
   default = {
     service_name                         = null
@@ -77,6 +93,11 @@ variable "gke_standard_cluster_default" {
     pods_cidr                            = null
     services_cidr                        = null
     management_zone_cidr_range           = null
+    master_authorized_networks           = []
+    enable_dns_endpoint                  = false
+    dns_endpoint_allow_external_traffic  = false
+    enable_k8s_tokens_via_dns            = false
+    enable_k8s_certs_via_dns             = false
     release_channel                      = "REGULAR"
     kubernetes_version                   = null
     monitoring_enabled_components        = ["SYSTEM_COMPONENTS"]
@@ -108,13 +129,17 @@ variable "gke_standard_cluster_default" {
     security_posture_mode               = "BASIC"
     security_posture_vulnerability_mode = "VULNERABILITY_BASIC"
     enable_gateway_api                  = false
-    maintenance_start_time              = "03:00"
-    initial_node_count                  = 1
-    enable_intranode_visibility         = false
-    cmek_key_id                         = null
-    gpu_type                            = ""
-    gpu_count                           = 0
-    autoscaling_min_node_count          = 1
-    autoscaling_max_node_count          = 3
+    enable_secret_manager_addon         = true
+    secret_sync_config = {
+      enabled = true
+    }
+    maintenance_start_time      = "03:00"
+    initial_node_count          = 1
+    enable_intranode_visibility = false
+    cmek_key_id                 = null
+    gpu_type                    = ""
+    gpu_count                   = 0
+    autoscaling_min_node_count  = 1
+    autoscaling_max_node_count  = 3
   }
 }

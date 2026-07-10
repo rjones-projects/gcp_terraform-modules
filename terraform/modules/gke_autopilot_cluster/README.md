@@ -1,3 +1,22 @@
+## Secret Manager integration
+
+By default, clusters are created with:
+
+- **Secret Manager add-on** (`enable_secret_manager_addon = true`) — mounts secrets from Secret Manager as in-memory files via the managed CSI driver (`secrets-store-gke.csi.k8s.io`). See [Secret Manager add-on](https://docs.cloud.google.com/secret-manager/docs/secret-manager-managed-csi-component).
+- **Secret synchronization** (`secret_sync_config.enabled = true`) — syncs Secret Manager secrets to native Kubernetes `Secret` objects via `SecretSync` resources. Requires GKE 1.33+ and Workload Identity (enabled by default on Autopilot). See [Synchronize secrets to Kubernetes Secrets](https://docs.cloud.google.com/secret-manager/docs/sync-k8-secrets).
+
+To enable automatic rotation of synced secrets, set `secret_sync_config.rotation_config`:
+
+```yaml
+secret_sync_config:
+  enabled: true
+  rotation_config:
+    enabled: true
+    rotation_interval: "120s"
+```
+
+Ensure `secretmanager.googleapis.com` is enabled in the project.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

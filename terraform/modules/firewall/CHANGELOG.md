@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2026-07-01
+### Fixed
+- Fixed issues with OPA policy
+
+## [1.0.5] - 2026-06-24
+### Added
+- Added OPA policy file
+
 ## [1.0.4] - 2026-02-27
 ### Added
 - Created test.yaml

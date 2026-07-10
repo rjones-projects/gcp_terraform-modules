@@ -13,7 +13,7 @@ resource "google_cloudfunctions2_function" "function" {
   project      = var.project_id
   depends_on   = [module.finops_labels]
   location     = each.value.location
-  name         = "${each.value.prefix}-${each.value.name}"
+  name         = each.value.prefix == "" ? each.value.name : "${each.value.prefix}-${each.value.name}"
   description  = each.value.description
   kms_key_name = each.value.kms_key == null ? null : each.value.kms_key
   build_config {
@@ -35,10 +35,15 @@ resource "google_cloudfunctions2_function" "function" {
     }
   }
   dynamic "event_trigger" {
-    for_each = each.value.trigger_config == null ? [] : [""]
+    for_each = (
+      each.value.trigger_config != null
+      && try(each.value.trigger_config.event_type, null) != null
+      && !each.value.is_http_trigger
+      && try(each.value.trigger_config.event_type, null) != "http"
+    ) ? [""] : []
 
     content {
-      event_type   = try(each.value.trigger_config.event_type, null)
+      event_type   = each.value.trigger_config.event_type
       pubsub_topic = try(each.value.trigger_config.pubsub_topic, null)
       trigger_region = (
         try(each.value.trigger_config.region, null) == null
@@ -61,7 +66,7 @@ resource "google_cloudfunctions2_function" "function" {
   service_config {
     all_traffic_on_latest_revision = true
     available_cpu                  = try(each.value.function_config.cpu, "0.166")
-    available_memory               = "${try(each.value.function_config.memory_mb, 256)}M"
+    available_memory               = can(regex("[a-zA-Z]", try(each.value.function_config.memory_mb, 256))) ? each.value.function_config.memory_mb : "${try(each.value.function_config.memory_mb, 256)}M"
     binary_authorization_policy    = try(each.value.function_config.binary_authorization_policy, null)
     environment_variables          = each.value.environment_variables
     ingress_settings               = each.value.ingress_settings
@@ -149,10 +154,13 @@ resource "google_cloudfunctions2_function_iam_binding" "binding" {
 resource "google_cloud_run_service_iam_binding" "invoker" {
   # cloud run resources are needed for invoker role to the underlying service
 
-  for_each = { for k, v in local.function_map : k => { location = v.location
-    invoker_data = lookup(try(v.iam, {}), "roles/run.invoker", null)
+  for_each = {
+    for k, v in local.function_map : k => {
+      location     = v.location
+      invoker_data = lookup(try(v.iam, {}), "roles/run.invoker", {})
     }
     if lookup(try(v.iam, {}), "roles/run.invoker", null) != null
+    || try(v.trigger_config.allow_unauthenticated, false) == true
   }
   project    = var.project_id
   depends_on = [google_cloudfunctions2_function.function]
@@ -163,7 +171,8 @@ resource "google_cloud_run_service_iam_binding" "invoker" {
     [for group in lookup(each.value.invoker_data, "groups", []) : "group:${group}"],
     [for sa in lookup(each.value.invoker_data, "service_accounts", []) : "serviceAccount:${sa}"],
     [for sp in lookup(each.value.invoker_data, "special_groups", []) : sp],
-    [for user in lookup(each.value.invoker_data, "users", []) : "user:${user}"]
+    [for user in lookup(each.value.invoker_data, "users", []) : "user:${user}"],
+    try(local.function_map[each.key].trigger_config.allow_unauthenticated, false) ? ["allUsers"] : []
   ))
   lifecycle {
     replace_triggered_by = [google_cloudfunctions2_function.function]
@@ -174,8 +183,14 @@ resource "google_cloud_run_service_iam_member" "invoker" {
   # if authoritative invoker role is not present and we create trigger sa
   # use additive binding to grant it the role
 
-  for_each = local.function_map
-
+  for_each = {
+    for k, v in local.function_map : k => v
+    if try(v.trigger_config.trigger_service_account_email, null) != null
+    && (
+      !v.is_http_trigger
+      || lookup(try(v.iam, {}), "roles/run.invoker", null) == null
+    )
+  }
 
   project    = var.project_id
   depends_on = [google_cloudfunctions2_function.function]

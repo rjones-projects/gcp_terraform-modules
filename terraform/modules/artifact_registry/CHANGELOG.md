@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2026-06-24
+### Fixed
+- Use `try()` for optional `remote` attributes (`public_repository`, `custom_repository`) so docker remote repos with only one upstream type plan successfully.
+
+## [1.0.5] - 2026-05-18
+### Added
+- Fixed issue with IAM bindings
+
 ## [1.0.4] - 2026-02-25
 ### Added
 - Updated test.yaml

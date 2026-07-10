@@ -1,0 +1,24 @@
+project_id: "your-project-id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+logging_sinks:
+  source:
+    version: v1.0.1
+  depends_on: []
+  spec:
+    - name: "example-bq-sink"
+      description: "Example BigQuery Sink"
+      dataset_id: "example_dataset"
+      filter: "severity >= WARNING"
+
+    - name: "example-gcs-sink"
+      description: "Example GCS Sink"
+      destination: "storage.googleapis.com/your-bucket-name"
+      filter: "severity >= ERROR"
+    

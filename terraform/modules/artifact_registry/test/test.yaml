@@ -2,17 +2,37 @@ project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
 region: "europe-west2"
 
 terraform:
-  required_version: ">= 1.14.0"
+  required_version: ">= 1.14.0, < 2.0.0"
   providers:
     google: ">= 7.17.0, < 8.0.0"
+    google-beta: ">= 7.17.0, < 8.0.0"
 
 artifact_registry:
   source:
-    version: v1.0.4
+    version: v1.0.6
   spec:
     - name: "my-new-artifact-repo"
-      format: 
-        docker :
-          standard : 
-            {}
+      format:
+        docker:
+          standard: {}
       location: "europe-west2"
+      iam_bindings:
+        storage_admin_with_delegated_roles:
+          members:
+            - "allAuthenticatedUsers"
+          role: "roles/storage.admin"
+    # Regression: remote docker repos must plan when only one upstream type is set
+    - name: docker-hub-remote
+      location: europe-west2
+      description: Remote proxy for Docker Hub
+      format:
+        docker:
+          remote:
+            public_repository: DOCKER_HUB
+    - name: quay-remote
+      location: europe-west2
+      description: Remote proxy for quay.io/argoproj
+      format:
+        docker:
+          remote:
+            custom_repository: https://quay.io/argoproj

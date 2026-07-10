@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-02-27
+### Updated
+- Fixed typo
+
 ## [1.0.4] - 2026-02-27
 ### Updated
 - Updated examples

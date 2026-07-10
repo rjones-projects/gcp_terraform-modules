@@ -17,7 +17,8 @@ variable "cloud_build_private_worker_pool" {
 variable "cloud_build_private_worker_pool_default" {
   description = "A private worker pool to be merged into"
   type = object({
-    name = string
+    name   = string
+    region = string
     worker_config = object({
       disk_size_gb                 = optional(number)
       machine_type                 = optional(string)
@@ -31,6 +32,7 @@ variable "cloud_build_private_worker_pool_default" {
   })
   default = {
     name           = null
+    region         = null
     worker_config  = null
     network_config = null
   }

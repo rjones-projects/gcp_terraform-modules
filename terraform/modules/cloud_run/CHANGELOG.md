@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-05-21
+### Updated
+- Fixed an issue not allowing use of existing service account
+
+## [1.0.3] - 2026-05-14
+### Updated
+- Fixed an issue with containers
+
 ## [1.0.2] - 2026-02-27
 ### Updated
 - Updated examples

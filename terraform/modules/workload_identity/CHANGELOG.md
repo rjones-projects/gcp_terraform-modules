@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-05-21
+### Added
+- Added conditional google.subject mapping for Workload Identity
+
 ## [1.0.2] - 2026-02-27
 ### Added
 - Added test.yaml

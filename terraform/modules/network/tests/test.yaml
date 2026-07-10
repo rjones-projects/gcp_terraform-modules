@@ -8,13 +8,13 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.1
+    version: v1.0.5
   depends_on: []
   spec:
 
 network:
   source:
-    version: v1.1.2
+    version: v1.1.12
   depends_on:
     - finops_labels
   spec:
@@ -24,6 +24,15 @@ network:
         vf_ngdi_environment: "alpha"
         vf_ngdi_shared: "true"
         vf_ngdi_goal: "networking"
-      auto_create_subnetworks: false
       routing_mode: "REGIONAL"
       description: "Test VPC"
+      subnets:
+        - name: "public-subnet"
+          ip_cidr_range: "10.0.1.0/24"
+          enable_private_access: true
+          flow_logs_config:
+            flow_sampling: 0.5
+            aggregation_interval: "INTERVAL_5_SEC"
+            metadata: "INCLUDE_ALL_METADATA"
+            send_secondary_ip_range_if_empty: false
+          

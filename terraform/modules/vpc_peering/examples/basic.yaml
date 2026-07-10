@@ -1,0 +1,52 @@
+project_id: "project_id"
+region: "europe-west3"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.6
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "vpc-a"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west3"
+      auto_create_subnetworks: false
+      subnets:
+        - name: "private"
+          region: "europe-west3"
+          ip_cidr_range: "10.0.1.0/24"
+          enable_private_access: true
+
+vpc_peering:
+  source:
+    version: v1.0.0
+  depends_on:
+    - network
+  spec:
+    - name: "peering-to-vpc-b"
+      prefix: "ngdi"
+      local_network: "projects/project_id/global/networks/project_id-vpc-vpc-a"
+      peer_network: "projects/project_id/global/networks/vpc-b"
+      peer_create_peering: true
+      routes_config:
+        local:
+          import: true
+          export: true
+        peer:
+          import: true
+          export: true

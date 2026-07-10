@@ -70,9 +70,25 @@ locals {
     "SERVICE",
   )
 
+  normalised_spec_containers = {
+    for k, v in try(local.cloud_run_spec.containers, {}) : k => {
+      image          = try(v.image, var.containers_default.image)
+      depends_on     = try(v.depends_on, var.containers_default.depends_on)
+      command        = try(v.command, var.containers_default.command)
+      args           = try(v.args, var.containers_default.args)
+      env            = try(v.env, var.containers_default.env)
+      env_from_key   = try(v.env_from_key, var.containers_default.env_from_key)
+      liveness_probe = try(v.liveness_probe, var.containers_default.liveness_probe)
+      ports          = tomap(try(v.ports, var.containers_default.ports))
+      resources      = try(v.resources, var.containers_default.resources)
+      startup_probe  = try(v.startup_probe, var.containers_default.startup_probe)
+      volume_mounts  = tomap(try(v.volume_mounts, var.containers_default.volume_mounts))
+    }
+  }
+
   containers = (
     length(var.containers) > 0
     ? var.containers
-    : try(local.cloud_run_spec.containers, {})
+    : local.normalised_spec_containers
   )
 }

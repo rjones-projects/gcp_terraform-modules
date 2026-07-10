@@ -4,7 +4,15 @@
 
 This module creates:
 
-* One or more Artifact Registries
+* One or more Artifact Registries (standard, remote, or virtual Docker repos and other formats)
+
+### Remote Docker repositories
+
+Remote repos proxy upstream registries (Docker Hub, Quay, GHCR, etc.) through Artifact Registry.
+Configure **either** `public_repository` (e.g. `DOCKER_HUB`) **or** `custom_repository` (upstream base URI).
+You do not need to set both — v1.0.6+ handles single-upstream configs correctly.
+
+See `examples/remote_registry.yaml` for Docker Hub, Quay, and GHCR remote proxies.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

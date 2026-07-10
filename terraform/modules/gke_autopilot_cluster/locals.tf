@@ -21,6 +21,8 @@ locals {
       security_posture_mode               = try(spec.security_posture_mode, var.gke_autopilot_cluster_default.security_posture_mode)
       security_posture_vulnerability_mode = try(spec.security_posture_vulnerability_mode, var.gke_autopilot_cluster_default.security_posture_vulnerability_mode)
       enable_gateway_api                  = try(spec.enable_gateway_api, var.gke_autopilot_cluster_default.enable_gateway_api)
+      enable_secret_manager_addon         = try(spec.enable_secret_manager_addon, var.gke_autopilot_cluster_default.enable_secret_manager_addon)
+      secret_sync_config                  = try(spec.secret_sync_config, var.gke_autopilot_cluster_default.secret_sync_config)
       maintenance_start_time              = try(spec.maintenance_start_time, var.gke_autopilot_cluster_default.maintenance_start_time)
       cmek_key_id                         = try(spec.cmek_key_id, var.gke_autopilot_cluster_default.cmek_key_id)
       sa_email                            = try(spec.sa_email, var.gke_autopilot_cluster_default.sa_email)

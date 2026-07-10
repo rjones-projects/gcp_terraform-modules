@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.1] - 2026-02-27
+## [1.0.3] - 2026-05-13
+### Added
+- Added optional region override
+
+## [1.0.2] - 2026-02-27
 ### Updated
 - Updated examples
 

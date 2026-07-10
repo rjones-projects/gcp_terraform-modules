@@ -38,9 +38,9 @@ resource "google_organization_iam_member" "organization-roles" {
 resource "google_project_iam_member" "project-roles" {
   for_each = {
     for pair in local.iam_project_pairs :
-    "${pair.name}-${pair.entity}-${pair.role}" => pair
+    "${pair.name}-${pair.role}" => pair
   }
-  project = each.value.entity
+  project = var.project_id
   role    = each.value.role
   member  = each.value.member
 
@@ -50,7 +50,7 @@ resource "google_project_iam_member" "project-roles" {
 resource "google_service_account_iam_member" "iam_bindings" {
   for_each = {
     for pair in local.iam_binding_pairs :
-    "${pair.name}-${pair.entity}-${pair.role}" => pair
+    "${pair.name}-${pair.member}-${pair.role}" => pair
   }
   service_account_id = each.value.entity
   role               = each.value.role

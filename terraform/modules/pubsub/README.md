@@ -53,6 +53,8 @@ pubsub:
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `topic_name` | string | yes | Topic name. `name` is also accepted as fallback. |
+| `ignore_creation` | bool | no | Defaults to false |
+| `project_id` | string | no | Defaults to project_id defined at start of YAML |
 | `kms_key_name` | string | no | CMEK for topic encryption. |
 | `message_retention_duration` | string | no | Pub/Sub duration format, e.g. `604800s`. |
 | `regions` | list(string) | no | Used for `message_storage_policy.allowed_persistence_regions`. |
@@ -61,6 +63,7 @@ pubsub:
 | `labels` | map(string) | no | FinOps input labels for topic. |
 | `notifications` | list(object) | no | Cloud Storage notification configs for this topic. |
 | `subscriptions` | list(object) | no | Subscription entries for this topic. |
+| `iam_bindings` | map(list(string)) | no | IAM bindings for this topic e.g. publisher role |
 
 ### Subscription fields
 
@@ -131,5 +134,6 @@ Policy defaults include:
   - `examples/basic.yaml`
   - `examples/notification.yaml`
   - `examples/multiple_topics.yaml`
+  - `examples/topic_exists_different_project.yaml`
 - Test sample:
-  - `tests/pubsub-basic.yaml`
+  - `tests/test.yaml`

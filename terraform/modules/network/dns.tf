@@ -79,3 +79,42 @@ resource "google_dns_record_set" "gcr_cname" {
   managed_zone = google_dns_managed_zone.gcr[0].name
   rrdatas      = ["gcr.io."]
 }
+
+# ------------------------------------------------------------------------------
+# Cloud DNS: pkg.dev (Artifact Registry)
+# ------------------------------------------------------------------------------
+resource "google_dns_managed_zone" "pkg_dev" {
+  count       = local.create_googleapis_dns ? 1 : 0
+  project     = local.project_id
+  name        = "pkg-dev-private-zone"
+  dns_name    = "pkg.dev."
+  description = "Private zone for Artifact Registry (pkg.dev) (${local.googleapis_dns_mode})"
+  visibility  = "private"
+  labels      = local.labels
+
+  private_visibility_config {
+    networks {
+      network_url = google_compute_network.vpc_network.id
+    }
+  }
+}
+
+resource "google_dns_record_set" "pkg_dev_a" {
+  count        = local.create_googleapis_dns ? 1 : 0
+  project      = local.project_id
+  name         = "pkg.dev."
+  type         = "A"
+  ttl          = 300
+  managed_zone = google_dns_managed_zone.pkg_dev[0].name
+  rrdatas      = local.googleapis_vip
+}
+
+resource "google_dns_record_set" "pkg_dev_cname" {
+  count        = local.create_googleapis_dns ? 1 : 0
+  project      = local.project_id
+  name         = "*.pkg.dev."
+  type         = "CNAME"
+  ttl          = 300
+  managed_zone = google_dns_managed_zone.pkg_dev[0].name
+  rrdatas      = ["pkg.dev."]
+}

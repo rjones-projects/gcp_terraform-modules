@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.7] - 2026-06-10
+### Changed
+- Changed memory to allow greater range of potential values
+
+## [1.0.6] - 2026-05-22
+### Added
+- HTTP trigger support: detect `trigger_config.http: true` and deploy without `event_trigger` (invoke via `service_config.uri` and `roles/run.invoker`)
+- Optional `allow_unauthenticated` on `trigger_config` grants `allUsers` the Cloud Run invoker role when set
+
+### Fixed
+- Skip `event_trigger` for HTTP-triggered functions (Gen2 HTTP uses Cloud Run URL, not Eventarc)
+- Skip additive `roles/run.invoker` member when `trigger_service_account_email` is unset
+
+## [1.0.5] - 2026-03-20
+### Fixed
+- Fixed an issue with naming functions without a prefix
+
 ## [1.0.4] - 2026-03-16
 ### Added
 - Updated TF code to remove requirement to have every value present in YAML

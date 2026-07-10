@@ -9,13 +9,13 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.2
+    version: v1.0.5
   depends_on:
   spec:
 
 cloud_function_v2:
   source:
-    version: v1.0.4
+    version: v1.0.7
   depends_on:
     - finops_labels
   spec:

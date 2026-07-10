@@ -3,8 +3,14 @@
 ## Summary 
 This module creates:
 
-* One or more Google Cloud Functions
+* One or more Google Cloud Functions (Gen2)
 * FinOps-compliant labels for each function via the shared `finops_labels` module
+
+### HTTP vs event triggers
+
+Gen2 **HTTP** functions do not use an `event_trigger` block. Mark the function in YAML with `trigger_config.http: true`, set `ingress_settings`, and grant callers `roles/run.invoker` on the underlying Cloud Run service (via `iam.roles/run.invoker` or `trigger_config.allow_unauthenticated: true`). The function URL is available from the `uri` output after deploy.
+
+Event-driven functions (Pub/Sub, GCS, etc.) use `trigger_config.event_type` with the Eventarc fields documented in `examples/basic.yaml`.
 
 ## Example 
 ```hcl 

@@ -50,6 +50,12 @@ variable "dataset_default" {
         special_groups   = optional(list(string))
         users            = optional(list(string))
       }))
+      metadata_viewers = optional(object({
+        groups           = optional(list(string))
+        service_accounts = optional(list(string))
+        special_groups   = optional(list(string))
+        users            = optional(list(string))
+      }))
     }))
   })
 

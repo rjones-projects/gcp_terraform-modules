@@ -1,0 +1,37 @@
+project_id: "project_id"
+region: "europe-west1"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+project_services:
+  source:
+    version: v1.0.3
+  depends_on: []
+  spec:
+    - name: "vault-consumer-required-apis"
+      service_list:
+        - "dns.googleapis.com"
+        - "compute.googleapis.com"
+        - "iam.googleapis.com"
+      service_config:
+        disable_on_destroy: false
+        disable_dependent_services: false
+
+vault_consumer:
+  source:
+    version: v1.0.0
+  depends_on:
+    - project_services
+  spec:
+    - project_id: "project_id"
+      network_name: "default"
+      environment: "live"
+      export_for_peering: false
+      enable_firewall_log: true
+      firewall_priority: 1000
+      dns_ttl: 300
+      custom_role_id: "vault_gcp_auth"
+      custom_role_title: "Vault GCP Auth"

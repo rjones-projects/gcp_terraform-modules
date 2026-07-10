@@ -72,18 +72,18 @@ resource "google_cloud_run_v2_service" "service" {
         dynamic "env" {
           for_each = coalesce(try(containers.value.env, tomap({})), tomap({}))
           content {
-            name  = env.key
-            value = env.value
+            name  = try(env.key, null)
+            value = try(env.value, null)
           }
         }
         dynamic "env" {
           for_each = coalesce(try(containers.value.env_from_key, tomap({})), tomap({}))
           content {
-            name = env.key
+            name = try(env.key, null)
             value_source {
               secret_key_ref {
-                secret  = env.value.secret
-                version = env.value.version
+                secret  = try(env.value.secret, null)
+                version = try(env.value.version, null)
               }
             }
           }
@@ -91,16 +91,16 @@ resource "google_cloud_run_v2_service" "service" {
         dynamic "resources" {
           for_each = try(containers.value.resources, null) == null ? [] : [""]
           content {
-            limits            = containers.value.resources.limits
-            cpu_idle          = containers.value.resources.cpu_idle
-            startup_cpu_boost = containers.value.resources.startup_cpu_boost
+            limits            = try(containers.value.resources.limits, null)
+            cpu_idle          = try(containers.value.resources.cpu_idle, null)
+            startup_cpu_boost = try(containers.value.resources.startup_cpu_boost, null)
           }
         }
         dynamic "ports" {
           for_each = coalesce(try(containers.value.ports, tomap({})), tomap({}))
           content {
-            container_port = ports.value.container_port
-            name           = ports.value.name
+            container_port = try(ports.value.container_port, null)
+            name           = try(ports.value.name, null)
           }
         }
         dynamic "volume_mounts" {
@@ -121,10 +121,10 @@ resource "google_cloud_run_v2_service" "service" {
         dynamic "liveness_probe" {
           for_each = try(containers.value.liveness_probe, null) == null ? [] : [""]
           content {
-            initial_delay_seconds = containers.value.liveness_probe.initial_delay_seconds
-            timeout_seconds       = containers.value.liveness_probe.timeout_seconds
-            period_seconds        = containers.value.liveness_probe.period_seconds
-            failure_threshold     = containers.value.liveness_probe.failure_threshold
+            initial_delay_seconds = try(containers.value.liveness_probe.initial_delay_seconds, null)
+            timeout_seconds       = try(containers.value.liveness_probe.timeout_seconds, null)
+            period_seconds        = try(containers.value.liveness_probe.period_seconds, null)
+            failure_threshold     = try(containers.value.liveness_probe.failure_threshold, null)
             dynamic "http_get" {
               for_each = try(containers.value.liveness_probe.http_get, null) == null ? [] : [""]
               content {
@@ -142,8 +142,8 @@ resource "google_cloud_run_v2_service" "service" {
             dynamic "grpc" {
               for_each = try(containers.value.liveness_probe.grpc, null) == null ? [] : [""]
               content {
-                port    = containers.value.liveness_probe.grpc.port
-                service = containers.value.liveness_probe.grpc.service
+                port    = try(containers.value.liveness_probe.grpc.port, null)
+                service = try(containers.value.liveness_probe.grpc.service, null)
               }
             }
           }
@@ -151,10 +151,10 @@ resource "google_cloud_run_v2_service" "service" {
         dynamic "startup_probe" {
           for_each = try(containers.value.startup_probe, null) == null ? [] : [""]
           content {
-            initial_delay_seconds = containers.value.startup_probe.initial_delay_seconds
-            timeout_seconds       = containers.value.startup_probe.timeout_seconds
-            period_seconds        = containers.value.startup_probe.period_seconds
-            failure_threshold     = containers.value.startup_probe.failure_threshold
+            initial_delay_seconds = try(containers.value.startup_probe.initial_delay_seconds, null)
+            timeout_seconds       = try(containers.value.startup_probe.timeout_seconds, null)
+            period_seconds        = try(containers.value.startup_probe.period_seconds, null)
+            failure_threshold     = try(containers.value.startup_probe.failure_threshold, null)
             dynamic "http_get" {
               for_each = try(containers.value.startup_probe.http_get, null) == null ? [] : [""]
               content {
@@ -178,8 +178,8 @@ resource "google_cloud_run_v2_service" "service" {
             dynamic "grpc" {
               for_each = try(containers.value.startup_probe.grpc, null) == null ? [] : [""]
               content {
-                port    = containers.value.startup_probe.grpc.port
-                service = containers.value.startup_probe.grpc.service
+                port    = try(containers.value.startup_probe.grpc.port, null)
+                service = try(containers.value.startup_probe.grpc.service, null)
               }
             }
           }

@@ -14,7 +14,7 @@ finops_labels:
 
 pubsub:
   source:
-    version: v1.0.1
+    version: v1.0.5
   depends_on:
     - finops_labels
   spec:
@@ -30,3 +30,14 @@ pubsub:
             vf_ngdi_environment: "alpha"
             vf_ngdi_data_layer: "bronze"
             vf_ngdi_shared: "true"
+      iam_bindings:
+        "group:testgroup":
+          - "roles/pubsub.publisher"
+
+    - topic_name: "test-topic2"
+      ignore_creation: true
+      project_id: vf-gned-ngdi-alpha-pltfrm-etl
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_shared: "true"

@@ -1,0 +1,27 @@
+project_id: "vf-gned-ngdi-pltfrm-alpha-etl"
+region: "europe-west3"
+env: "alpha"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+vpc_peering:
+  source:
+    version: v1.0.0
+  depends_on:
+    - network
+  spec:
+    - name: "vf-nwp-cntr-nonlive-runners"
+      prefix: "ngdi"
+      local_network: "projects/vf-gned-ngdi-pltfrm-alpha-etl/global/networks/vf-gned-ngdi-pltfrm-alpha-etl-vpc"
+      peer_network: "projects/vf-nwp-cntr-nonlive/global/networks/REPLACE_RUNNER_VPC_NAME"
+      peer_create_peering: false
+      routes_config:
+        local:
+          import: true
+          export: true
+        peer:
+          import: true
+          export: true

@@ -78,6 +78,67 @@ variable "containers" {
   }
 }
 
+variable "containers_default" {
+  description = "default values for containers to be merged into"
+  type = object({
+    image      = string
+    depends_on = optional(list(string))
+    command    = optional(list(string))
+    args       = optional(list(string))
+    env        = optional(map(string))
+    env_from_key = optional(map(object({
+      secret  = string
+      version = string
+    })))
+    liveness_probe = optional(object({
+      grpc = optional(object({
+        port    = optional(number, null)
+        service = optional(string, null)
+      }))
+      http_get = optional(object({
+        http_headers = optional(map(string))
+        path         = optional(string, null)
+        port         = optional(number, null)
+      }))
+      failure_threshold     = optional(number, null)
+      initial_delay_seconds = optional(number, null)
+      period_seconds        = optional(number, null)
+      timeout_seconds       = optional(number, null)
+    }))
+    ports = optional(map(object({
+      container_port = optional(number, null)
+      name           = optional(string, null)
+    })))
+    resources = optional(object({
+      limits            = optional(map(string))
+      cpu_idle          = optional(bool, null)
+      startup_cpu_boost = optional(bool, null)
+    }))
+    startup_probe = optional(object({
+      grpc = optional(object({
+        port    = optional(number, null)
+        service = optional(string, null)
+      }))
+      http_get = optional(object({
+        http_headers = optional(map(string))
+        path         = optional(string, null)
+        port         = optional(number, null)
+      }))
+      tcp_socket = optional(object({
+        port = optional(number, null)
+      }))
+      failure_threshold     = optional(number, null)
+      initial_delay_seconds = optional(number, null)
+      period_seconds        = optional(number, null)
+      timeout_seconds       = optional(number, null)
+    }))
+    volume_mounts = optional(map(string))
+  })
+  default = {
+    image = null
+  }
+}
+
 variable "context" {
   description = "Context-specific interpolations."
   type = object({
@@ -121,23 +182,11 @@ variable "job_config" {
     task_count  = optional(number)
     timeout     = optional(string)
   })
-  default = {
-    max_retries = 3
-    task_count  = 1
-    timeout     = "600s"
-  }
+  default  = {}
   nullable = false
   validation {
     condition     = var.job_config.timeout == null ? true : endswith(var.job_config.timeout, "s")
     error_message = "Timeout should follow format of number with up to nine fractional digits, ending with 's'. Example: '3.5s'."
-  }
-  validation {
-    condition     = var.job_config.max_retries == null ? true : (var.job_config.max_retries >= 0 && var.job_config.max_retries <= 10)
-    error_message = "max_retries must be between 0 and 10 (GCP Cloud Run Job limit)."
-  }
-  validation {
-    condition     = var.job_config.task_count == null ? true : var.job_config.task_count >= 1
-    error_message = "task_count must be at least 1."
   }
 }
 
@@ -252,11 +301,6 @@ variable "revision" {
     )
     error_message = "Either provide connector to create in var.vpc_connector_create or provide externally managed connector in var.revision.vpc_access.connector"
   }
-
-  validation {
-    condition     = try(var.revision.timeout, null) == null ? true : endswith(var.revision.timeout, "s")
-    error_message = "revision.timeout must end with 's'. Example: '300s'."
-  }
 }
 
 variable "service_config" {
@@ -318,26 +362,6 @@ variable "service_config" {
     Ingress should be one of INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_INTERNAL_ONLY,
     INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER.
     EOF
-  }
-
-  validation {
-    condition     = try(var.service_config.timeout, null) == null ? true : endswith(var.service_config.timeout, "s")
-    error_message = "service_config.timeout must end with 's'. Example: '300s'."
-  }
-
-  validation {
-    condition     = try(var.service_config.max_concurrency, null) == null ? true : (var.service_config.max_concurrency >= 1 && var.service_config.max_concurrency <= 1000)
-    error_message = "max_concurrency must be between 1 and 1000 (GCP Cloud Run limit)."
-  }
-
-  validation {
-    condition     = try(var.service_config.scaling.min_instance_count, null) == null ? true : var.service_config.scaling.min_instance_count >= 0
-    error_message = "scaling.min_instance_count must be >= 0."
-  }
-
-  validation {
-    condition     = try(var.service_config.scaling.max_instance_count, null) == null ? true : var.service_config.scaling.max_instance_count >= 1
-    error_message = "scaling.max_instance_count must be >= 1."
   }
 }
 
@@ -405,26 +429,6 @@ variable "workerpool_config" {
   })
   default  = {}
   nullable = false
-
-  validation {
-    condition     = try(var.workerpool_config.scaling.mode, null) == null ? true : contains(["AUTOMATIC", "MANUAL"], var.workerpool_config.scaling.mode)
-    error_message = "workerpool_config.scaling.mode must be AUTOMATIC or MANUAL."
-  }
-
-  validation {
-    condition     = try(var.workerpool_config.scaling.min_instance_count, null) == null ? true : var.workerpool_config.scaling.min_instance_count >= 0
-    error_message = "workerpool_config.scaling.min_instance_count must be >= 0."
-  }
-
-  validation {
-    condition     = try(var.workerpool_config.scaling.max_instance_count, null) == null ? true : var.workerpool_config.scaling.max_instance_count >= 1
-    error_message = "workerpool_config.scaling.max_instance_count must be >= 1."
-  }
-
-  validation {
-    condition     = try(var.workerpool_config.scaling.manual_instance_count, null) == null ? true : var.workerpool_config.scaling.manual_instance_count >= 1
-    error_message = "workerpool_config.scaling.manual_instance_count must be >= 1."
-  }
 }
 
 variable "cloud_run" {

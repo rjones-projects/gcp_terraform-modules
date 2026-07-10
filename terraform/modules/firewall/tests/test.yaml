@@ -9,13 +9,13 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.3
+    version: v1.0.5
   depends_on: []
   spec:
 
 network:
   source:
-    version: v1.1.3
+    version: v1.1.10
   depends_on:
     - finops_labels
   spec:
@@ -29,7 +29,7 @@ network:
 
 firewall:
   source:
-    version: v1.0.4
+    version: v1.0.5
   depends_on: []
   spec:
     - network: "main-vpc"

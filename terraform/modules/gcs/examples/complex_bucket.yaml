@@ -9,13 +9,13 @@ terraform:
 
 finops-lables:
   source:
-    version: v1.0.2
+    version: v1.0.5
   depends_on: []
   spec:
 
 gcs:
   source:
-    version: v1.1.5
+    version: v1.1.10
   depends_on:
     - finops_labels
   spec:
@@ -23,6 +23,8 @@ gcs:
       location: "europe-central2"
       storage_class: "STANDARD"
       uniform_bucket_level_access: true
+      # Can be enforced or inherited only
+      public_access_prevention: enforced
       kms_key_name: "my-kms-key"
       finops_resource_type: "gcs_bucket"
       labels:
@@ -60,17 +62,17 @@ gcs:
       autoclass: true
       iam_bindings:
         storage_admin_with_delegated_roles :
-          - members: 
+          members: 
             - "allAuthenticatedUsers"
-            role: "roles/storage.admin"
-            condition:
+          role: "roles/storage.admin"
+          condition:
             - expression: "expression_here"
               title: "title_here"
               description: "description_here"
       iam_bindings_additive:
         "storage_admin_with_delegated_roles" :
-          - member: "allAuthenticatedUsers"
-            role: "roles/storage.admin"
+          member: "allAuthenticatedUsers"
+          role: "roles/storage.admin"
       objects_to_upload:
         "object_one":
           - name: "object_name"

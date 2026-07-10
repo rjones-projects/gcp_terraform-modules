@@ -22,3 +22,11 @@ output "cluster_ids" {
   description = "Cluster ID"
   value       = { for cluster in google_container_cluster.tenant_gke_cluster : cluster.name => cluster.id }
 }
+
+output "dns_endpoints" {
+  description = "DNS-based control-plane endpoint per cluster (empty string when the DNS endpoint is not enabled). Use this value as the Argo CD cluster server URL: https://<dns_endpoint>."
+  value = {
+    for cluster in google_container_cluster.tenant_gke_cluster :
+    cluster.name => try(cluster.control_plane_endpoints_config[0].dns_endpoint_config[0].endpoint, "")
+  }
+}

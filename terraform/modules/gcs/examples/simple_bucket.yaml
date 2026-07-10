@@ -9,18 +9,19 @@ terraform:
 
 finops-lables:
   source:
-    version: v1.0.2
+    version: v1.0.5
   depends_on: []
   spec:
 
 gcs:
   source:
-    version: v1.1.5
+    version: v1.1.10
   depends_on:
     - finops_labels
   spec:
     - name: "unique-bucket-name"
       location: "europe-central2"
+      kms_key_name: "my-kms-key"
       finops_resource_type: "gcs_bucket"
       labels:
         vf_ngdi_environment: "alpha"

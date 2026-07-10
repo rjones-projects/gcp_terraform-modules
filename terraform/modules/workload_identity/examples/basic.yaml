@@ -19,12 +19,13 @@ iam_service_account:
 
 workload_identity:
   source:
-    version: 1.0.1
+    version: v1.0.3
   depends_on:
     - iam_service_account
   spec:
     - service_account_email: "projects/terraform-test-project/serviceAccounts/github-actions@terraform-test-project.iam.gserviceaccount.com"
       github_org: "VFGROUP-NSE-DNOSS"
       github_repo: "DNE-DE-NGDI-SOURCECODE"
+      google_subject: "assertion.repository_id"
       pool_id: "github2-pool2"
       provider_id: "github2-provider2"

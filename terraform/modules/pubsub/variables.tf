@@ -22,6 +22,8 @@ variable "topic_default" {
   description = "A topic object to be merged into."
   type = object({
     topic_name                 = string
+    ignore_creation            = bool
+    project_id                 = string
     kms_key_name               = string
     message_retention_duration = string
     regions                    = list(string)
@@ -30,9 +32,12 @@ variable "topic_default" {
     schema                     = any
     subscriptions              = list(any)
     notifications              = list(any)
+    iam_bindings               = map(list(string))
   })
   default = {
     topic_name                 = null
+    ignore_creation            = false
+    project_id                 = null
     kms_key_name               = null
     message_retention_duration = null
     regions                    = []
@@ -41,6 +46,7 @@ variable "topic_default" {
     schema                     = null
     subscriptions              = []
     notifications              = []
+    iam_bindings               = {}
   }
 }
 

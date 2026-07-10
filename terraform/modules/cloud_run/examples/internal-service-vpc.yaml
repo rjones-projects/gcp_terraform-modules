@@ -21,7 +21,7 @@ project_services:
 
 cloud_run:
   source:
-    version: v1.0.2
+    version: v1.0.4
   depends_on:
     - project_services
   spec:

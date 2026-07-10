@@ -2,9 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
-### Changed
+## [1.0.7] - 2026-06-23
 
-- Updated README with notification direction guidance (GCS->Pub/Sub vs Pub/Sub->GCS), supported event types, and notification fields.
+### Fixed
+
+- Fixed issue where IAM member resources attempted to modify topics/subscriptions with `ignore_creation = true`, resulting in 404 errors during apply
+- Added filter to `topic_iam_binding_pairs` to skip IAM bindings for non-created topics
+- Added filter to `topic_notification_pubsub_publishers` to skip publisher permissions for non-created topics
+
+## [1.0.6] - 2026-06-10
+### Added
+- Added custom IAM bindings for pubsub topics
+
+## [1.0.5] - 2026-05-15
+### Added
+- Fixed additional issue with IAM bindings
+
+## [1.0.4] - 2026-05-14
+### Added
+- Added prefix to notifications
+- Fixed issue with IAM bindings
+
+## [1.0.3] - 2026-05-13
+### Added
+- Added flag that allows use of existing topics
 
 ## [1.0.2] - 2026-02-27
 ### Updated

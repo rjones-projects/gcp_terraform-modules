@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.10] - 2026-06-23
+### Added
+- gcs CMEK OPA rule now evaluates all bucket plan actions except delete, so existing buckets without a CMEK key are flagged
+
+## [1.1.9] - 2026-06-23
+### Added
+- Added OPA policy enforcing CMEK on GCS buckets: denies any 'google_storage_bucket' created or updated without 'kms_key_name'
+
+## [1.1.8] - 2026-06-03
+### Fixed
+- Fixed an issue with public_access_prevention 
+
+## [1.1.7] - 2026-06-02
+### Added
+- Added option for public_access_prevention, this can either be inherited or enforced
+
+## [1.1.6] - 2026-05-11
+### Updated
+- Fixed issue with IAM bindings when there were multiple bindings for one bucket
+- Updated examples
+- Expanded tests
+
 ## [1.1.5] - 2026-02-27
 ### Updated
 - Updated examples

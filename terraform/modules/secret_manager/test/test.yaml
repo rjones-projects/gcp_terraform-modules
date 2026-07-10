@@ -34,12 +34,6 @@ secret_manager:
         rotation_period: "2592000s"
       topics:
         - "projects/terraform-test-project/topics/secret-events"
-      create_binding: true
-      members:
-        - "group:platform@example.com"
-      iam_bindings:
-        "roles/secretmanager.viewer":
-          - "serviceAccount:security-bot@terraform-test-project.iam.gserviceaccount.com"
     
     - secret_id: "service-token"
       replication_automatic: false

@@ -24,6 +24,7 @@ project_services:
         - "monitoring.googleapis.com"
         - "dns.googleapis.com"
         - "logging.googleapis.com"
+        - "secretmanager.googleapis.com"
       service_config: 
         disable_on_destroy: false
         disable_dependent_services: false
@@ -73,7 +74,7 @@ network:
 
 gke_autopilot_cluster:
   source:
-    version: v1.0.0
+    version: v1.1.0
   depends_on:
     - kms
     - network

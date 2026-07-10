@@ -24,6 +24,7 @@ variable "bucket_default" {
     kms_key_name                = string
     labels                      = map(string)
     versioning_enabled          = bool
+    public_access_prevention    = string
     accesses = list(object({
       role    = string
       members = list(string)
@@ -80,6 +81,7 @@ variable "bucket_default" {
     kms_key_name                = null
     labels                      = {}
     versioning_enabled          = true
+    public_access_prevention    = "enforced"
     accesses                    = []
     retention_policy            = null
     logging                     = null

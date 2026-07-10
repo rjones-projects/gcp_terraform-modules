@@ -1,0 +1,36 @@
+project_id: "project_id"
+region: "europe-central2"
+env: alpha
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.2
+  depends_on: []
+  spec: []
+
+pubsub:
+  source:
+    version: v1.0.6
+  depends_on:
+    - finops_labels
+  spec:
+    - topic_name: "example_topic"
+      # These values are both optional. 
+      # Ignore creation tells TF not to create the topic as it already exists
+      ignore_creation: true
+      # Project ID can be provided if the topic already exists in another project
+      project_id: vf-gned-ngdi-alpha-pltfrm-etl
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_data_layer: "bronze"
+        vf_ngdi_shared: "true"
+      notifications:
+        - bucket: "test-bucket"
+          event_types:
+            - "OBJECT_FINALIZE"
+          payload_format: "JSON_API_V1"

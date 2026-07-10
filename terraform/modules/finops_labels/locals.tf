@@ -107,7 +107,7 @@ locals {
     name => merge(
       try(local.policy.defaults_by_type[cfg.resource_type], {}),
       cfg.input_labels,
-      cfg.resource_name != null ? { vf_ngdi_resource_name = cfg.resource_name } : {}
+      cfg.resource_name != null && try(cfg.input_labels.vf_ngdi_resource_name, null) == null ? { vf_ngdi_resource_name = cfg.resource_name } : {}
     )
   }
 

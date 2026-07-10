@@ -1,0 +1,19 @@
+project_id: "vf-gned-ngdi-alpha-pltfrm-orch"
+region: "europe-west2"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+ssl_policy:
+  source:
+    version: v1.0.0
+  depends_on: []
+  spec:
+    - name: test_policy
+      profile: RESTRICTED
+      tls_version: TLS_1_2
+    
+    - name: test_policy2
+      profile: MODERN

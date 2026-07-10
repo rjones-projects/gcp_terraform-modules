@@ -6,10 +6,11 @@ locals {
 
   workload_identity_config = try(var.workload_identity.spec[0], {})
 
-  github_org  = coalesce(try(local.workload_identity_config.github_org, null), "VFGROUP-NSE-DNOSS")
-  github_repo = local.workload_identity_config.github_repo
-  pool_id     = coalesce(try(local.workload_identity_config.pool_id, null), "github2-pool2")
-  provider_id = coalesce(try(local.workload_identity_config.provider_id, null), "github2-provider2")
+  github_org     = coalesce(try(local.workload_identity_config.github_org, null), "VFGROUP-NSE-DNOSS")
+  github_repo    = local.workload_identity_config.github_repo
+  google_subject = coalesce(try(local.workload_identity_config.google_subject, null), "assertion.sub")
+  pool_id        = coalesce(try(local.workload_identity_config.pool_id, null), "github2-pool2")
+  provider_id    = coalesce(try(local.workload_identity_config.provider_id, null), "github2-provider2")
 
   display_name = coalesce(
     try(local.workload_identity_config.display_name, null),

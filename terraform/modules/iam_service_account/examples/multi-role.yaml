@@ -7,12 +7,11 @@ terraform:
 
 iam_service_account:
   source:
-    version: v1.0.3
+    version: v1.1.0
   spec: 
     - name: "dataform-sa"
-      iam_project_roles:
-        "project_id": 
-          - "roles/composer.worker"
+      iam_project_roles: 
+        - "roles/composer.worker"
       iam_storage_roles:
         "example_bucket":
           - "roles/storage.objectViewer"

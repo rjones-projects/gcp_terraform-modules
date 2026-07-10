@@ -1,3 +1,8 @@
+data "google_project" "this" {
+  count      = local.iam_enabled ? 1 : 0
+  project_id = var.project_id
+}
+
 resource "google_project_service" "secret_manager_api" {
   project            = var.project_id
   service            = "secretmanager.googleapis.com"
@@ -85,8 +90,8 @@ resource "google_secret_manager_secret_iam_binding" "accessor_binding" {
     if cfg.create_binding && length(cfg.members) > 0
   }
 
-  project   = var.project_id
-  secret_id = google_secret_manager_secret.this[each.key].secret_id
+  project   = data.google_project.this[0].number
+  secret_id = google_secret_manager_secret.this[each.key].name
   role      = "roles/secretmanager.secretAccessor"
   members   = each.value.members
 }
@@ -94,8 +99,8 @@ resource "google_secret_manager_secret_iam_binding" "accessor_binding" {
 resource "google_secret_manager_secret_iam_member" "member" {
   for_each = local.iam_member_pairs
 
-  project   = var.project_id
-  secret_id = google_secret_manager_secret.this[each.value.secret_id].secret_id
+  project   = data.google_project.this[0].number
+  secret_id = google_secret_manager_secret.this[each.value.secret_id].name
   role      = each.value.role
   member    = each.value.member
 }

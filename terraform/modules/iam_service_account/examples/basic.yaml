@@ -7,11 +7,11 @@ terraform:
 
 iam_service_account:
   source:
-    version: v1.0.3
+    version: v1.1.0
   spec: 
     - name: "dataform-sa"
       iam_project_roles:
-        "project_id": 
-          - "roles/logging.logWriter"
-          - "roles/monitoring.metricWriter"
-          - "roles/iam.serviceAccountUser"
+        # Roles will be added to SA in project specified in project_id (line 1)
+        - "roles/logging.logWriter"
+        - "roles/monitoring.metricWriter"
+        - "roles/iam.serviceAccountUser"

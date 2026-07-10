@@ -1,23 +1,12 @@
-data "google_service_account" "service_account" {
-  for_each = {
-    for k, v in local.service_accounts : k => v
-    if v.service_account_reuse == true
-  }
-
-  project    = each.value.project_id
-  account_id = "${try(each.value.prefix, null) == null ? "" : "${each.value.prefix}-"}${each.value.name}"
-}
-
 resource "google_service_account" "service_account" {
   for_each = {
     for k, v in local.service_accounts : k => v
-    if v.service_account_reuse == null
+    if v.service_account_reuse == false
   }
-  project                      = each.value.project_id
-  account_id                   = "${try(each.value.prefix, null) == null ? "" : "${each.value.prefix}-"}${each.value.name}"
-  display_name                 = each.value.display_name
-  description                  = each.value.description
-  create_ignore_already_exists = each.value.create_ignore_already_exists
+  project      = each.value.project_id
+  account_id   = "${try(each.value.prefix, null) == null ? "" : "${each.value.prefix}-"}${each.value.name}"
+  display_name = each.value.display_name
+  description  = each.value.description
 }
 
 resource "google_tags_tag_binding" "binding" {

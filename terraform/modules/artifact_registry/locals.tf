@@ -47,23 +47,19 @@ locals {
     }
   }
 
-  iam_bindings_entries = flatten([
-    for _, reg_val in local.registry_map : [
-      for iam_val in reg_val.iam_bindings : [
-        for k, v in iam_val : {
+  iam_bindings_map = {
+    for entry in flatten([
+      for reg_key, reg_val in local.registry_map : [
+        for k, v in reg_val.iam_bindings : {
           unique_key    = "${reg_val.name}-${k}-${v.role}"
           registry_name = reg_val.name
           role          = v.role
           members       = v.members
-          condition     = try(v.condition, [])
+          condition     = try(v.condition, null)
           location      = reg_val.location
         }
       ]
-    ]
-  ])
-
-  iam_bindings_map = {
-    for entry in local.iam_bindings_entries : entry.unique_key => {
+      ]) : entry.unique_key => {
       registry_name = entry.registry_name
       role          = entry.role
       members       = entry.members
@@ -74,16 +70,14 @@ locals {
 
   iam_bindings_additive_entries = flatten([
     for _, reg_val in local.registry_map : [
-      for iam_val in reg_val.iam_bindings_additive : [
-        for k, v in iam_val : {
-          unique_key    = "${reg_val.name}-${k}-${v.role}"
-          registry_name = reg_val.name
-          role          = v.role
-          member        = v.member
-          condition     = try(v.condition, [])
-          location      = reg_val.location
-        }
-      ]
+      for k, v in reg_val.iam_bindings_additive : {
+        unique_key    = "${reg_val.name}-${k}-${v.role}"
+        registry_name = reg_val.name
+        role          = v.role
+        member        = v.member
+        condition     = try(v.condition, null)
+        location      = reg_val.location
+      }
     ]
   ])
 

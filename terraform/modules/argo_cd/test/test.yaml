@@ -1,0 +1,143 @@
+project_id: "vf-gned-ngdi-pltfrm-beta-acd"
+region: "europe-west3"
+
+terraform:
+  required_version: ">= 1.14.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.4
+  depends_on: []
+  spec:
+
+project_services:
+  source:
+    version: v1.0.6
+  depends_on: []
+  spec:
+    - name: "acd-services"
+      service_list:
+        - "container.googleapis.com"
+        - "compute.googleapis.com"
+        - "monitoring.googleapis.com"
+        - "logging.googleapis.com"
+        - "dns.googleapis.com"
+
+iam_service_account:
+  source:
+    version: v1.0.4
+  depends_on:
+    - project_services
+  spec:
+    - name: "gke-acd-sa"
+      display_name: "GKE SA for Argo CD cluster"
+      iam_project_roles:
+        "vf-gned-ngdi-pltfrm-beta-acd":
+          - "roles/logging.logWriter"
+          - "roles/monitoring.metricWriter"
+          - "roles/monitoring.viewer"
+          - "roles/stackdriver.resourceMetadata.writer"
+
+kms:
+  source:
+    version: v2.0.0
+  depends_on:
+    - iam_service_account
+  spec:
+    - keyring:
+        location: "europe-west3"
+        name: "keyring-acd-test"
+      keys:
+        cmek-acd-test:
+          rotation_period: "7776000s"
+          version_template:
+            algorithm: "GOOGLE_SYMMETRIC_ENCRYPTION"
+            protection_level: "HSM"
+          labels:
+            env: "test"
+            owner: "platform"
+          iam_bindings:
+            gke-binding:
+              role: "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+              members:
+                - "serviceAccount:service-741439689304@container-engine-robot.iam.gserviceaccount.com"
+
+network:
+  source:
+    version: v1.1.6
+  depends_on:
+    - finops_labels
+    - project_services
+  spec:
+    - common_resource_id: "acd-test"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "beta"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "foundation"
+        vf_ngdi_location: "europe-west3"
+      auto_create_subnetworks: false
+      subnets:
+        - name: "trusted-zone"
+          ip_cidr_range: "10.30.0.0/24"
+          secondary_ip_ranges:
+            - range_name: "gke-pods"
+              ip_cidr_range: "10.31.0.0/16"
+            - range_name: "gke-services"
+              ip_cidr_range: "10.32.0.0/20"
+
+gke_autopilot_cluster:
+  source:
+    version: v1.0.0
+  depends_on:
+    - kms
+    - network
+    - project_services
+    - iam_service_account
+  spec:
+    - service_name: "acd-cluster"
+      zone: "europe-west3"
+      deletion_protection: false
+      kubernetes_version: "1.34.3-gke.1318000"
+      network_name: "acd-test-vpc"
+      subnet_name: "vf-gned-ngdi-pltfrm-beta-acd-subnet-trusted-zone"
+      gke_master_cidr: "172.16.0.0/28"
+      services_cidr: "gke-services"
+      pods_cidr: "gke-pods"
+      management_zone_cidr_range: "10.30.0.0/24"
+      cmek_key_id: "projects/vf-gned-ngdi-pltfrm-beta-acd/locations/europe-west3/keyRings/keyring-acd-test/cryptoKeys/cmek-acd-test"
+      sa_email: "gke-acd-sa@vf-gned-ngdi-pltfrm-beta-acd.iam.gserviceaccount.com"
+      finops_resource_type: "compute"
+      labels:
+        vf_cost_item: "ngdi"
+        vf_ngdi_environment: "beta"
+        vf_ngdi_shared: "true"
+
+argo_cd:
+  source:
+    version: v1.0.0
+  depends_on:
+    - gke_autopilot_cluster
+  cluster_name: "acd-cluster"
+  cluster_location: "europe-west3"
+  spec:
+    - name: "argocd"
+      namespace: "argocd"
+      chart_version: "9.5.14"
+      create_namespace: true
+      wait: false
+      timeout: 600
+      helm_values: |
+        global:
+          domain: argocd.test.example.com
+        configs:
+          params:
+            server.insecure: true
+      finops_resource_type: "compute"
+      labels:
+        vf_cost_item: "ngdi"
+        vf_ngdi_environment: "beta"
+        vf_ngdi_shared: "true"
+        vf_ngdi_domain: "pltfrm"

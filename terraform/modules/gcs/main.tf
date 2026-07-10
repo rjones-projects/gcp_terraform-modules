@@ -15,7 +15,8 @@ resource "google_storage_bucket" "bucket" {
   location      = each.value.location
   # checkov:skip=CKV_GCP_29:Ensure that Cloud Storage buckets have uniform bucket-level access enabled
   uniform_bucket_level_access = each.value.uniform_bucket_level_access
-  public_access_prevention    = "enforced"
+  # checkov:skip=CKV_GCP_114:Ensure public access prevention is enforced on Cloud Storage bucket
+  public_access_prevention = each.value.public_access_prevention
 
   labels = try(
     module.finops_labels.labels["${each.value.finops_resource_type}/${each.value.bucket_name}"],

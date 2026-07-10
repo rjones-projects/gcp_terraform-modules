@@ -13,7 +13,7 @@ finops_labels:
 
 kms:
   source:
-    version: v2.0.0
+    version: v3.0.0
   depends_on:
     - finops_labels
   spec:

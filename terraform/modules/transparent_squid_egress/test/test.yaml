@@ -42,16 +42,15 @@ gcs:
 
 iam_service_account:
   source:
-    version: v1.0.3
+    version: v1.1.0
   depends_on:
     - gcs
   spec: 
     - name: "squid-sa"
       display_name: "Squid service account"
       iam_project_roles:
-        "vf-gned-ngdi-alpha-pltfrm-orch":
-          - "roles/logging.logWriter"
-          - "roles/monitoring.metricWriter"
+        - "roles/logging.logWriter"
+        - "roles/monitoring.metricWriter"
       iam_storage_roles:
         "squid-test-bucket-vf":
           - "roles/storage.objectViewer"         
@@ -101,7 +100,7 @@ network:
     
 transparent_squid_egress:
   source:
-    version: v1.0.1
+    version: v1.0.2
   depends_on:
     - network
     - gcs

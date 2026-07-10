@@ -8,13 +8,13 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.1
+    version: v1.0.5
   depends_on: []
   spec:
 
 bigquery:
   source:
-    version: v1.0.7
+    version: v1.0.8
   depends_on:
     - finops_labels
   spec:
@@ -62,6 +62,15 @@ bigquery:
           users:
             - "user-name@example.com"
         users:
+          groups:
+            - "example-group@googlegroups.com"
+          service_accounts:
+            - "example-service-account@project_id.iam.gserviceaccount.com"
+          special_groups:
+            - "projectOwners"
+          users:
+            - "user-name@example.com"
+        metadata_viewers:
           groups:
             - "example-group@googlegroups.com"
           service_accounts:

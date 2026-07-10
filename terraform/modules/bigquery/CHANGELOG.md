@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.8] - 2026-06-02
+### Added
+- Added option to add metadata readers
+
 ## [1.0.7] - 2026-02-25
 ### Added
 - Updated test.yaml

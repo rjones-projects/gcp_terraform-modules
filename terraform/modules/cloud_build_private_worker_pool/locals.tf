@@ -4,6 +4,7 @@ locals {
       name           = try(spec.name, var.cloud_build_private_worker_pool_default.name)
       worker_config  = try(spec.worker_config, var.cloud_build_private_worker_pool_default.worker_config)
       network_config = try(spec.network_config, var.cloud_build_private_worker_pool_default.network_config)
+      region         = try(spec.region, var.region)
     }
   }
 }

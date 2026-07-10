@@ -122,6 +122,27 @@ resource "google_container_cluster" "autopilot_gke_cluster" {
     channel = each.value.enable_gateway_api ? "CHANNEL_STANDARD" : "CHANNEL_DISABLED"
   }
 
+  dynamic "secret_manager_config" {
+    for_each = each.value.enable_secret_manager_addon ? [1] : []
+    content {
+      enabled = true
+    }
+  }
+
+  dynamic "secret_sync_config" {
+    for_each = each.value.secret_sync_config.enabled ? [1] : []
+    content {
+      enabled = true
+      dynamic "rotation_config" {
+        for_each = try(each.value.secret_sync_config.rotation_config, null) != null ? [each.value.secret_sync_config.rotation_config] : []
+        content {
+          enabled           = rotation_config.value.enabled
+          rotation_interval = rotation_config.value.rotation_interval
+        }
+      }
+    }
+  }
+
   maintenance_policy {
     daily_maintenance_window {
       start_time = each.value.maintenance_start_time

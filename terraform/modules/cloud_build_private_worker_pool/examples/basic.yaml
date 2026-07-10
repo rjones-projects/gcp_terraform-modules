@@ -9,10 +9,12 @@ terraform:
 
 cloud_build_private_worker_pool:
   source: 
-    version: v1.0.2
+    version: v1.0.3
   depends_on: []
   spec:
     - name: "test-pool"
+      # Optional: Region override. Region defaults to value at start of YAML, unless otherwise defined in this value  
+      region: europe-west1
       worker_config: 
         disk_size_gb: 100
         machine_type: "e2-standard-4"

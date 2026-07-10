@@ -47,7 +47,7 @@ variable "compute_instance_default" {
     name                        = null
     can_ip_forward              = false
     deletion_protection         = false
-    machine_type                = "e2-medium"
+    machine_type                = "e2-small"
     allow_stopping_for_update   = true
     metadata                    = {}
     startup_script_url          = ""
@@ -60,7 +60,7 @@ variable "compute_instance_default" {
     boot_disk_mode              = "READ_WRITE"
     boot_disk_image             = null
     boot_disk_size              = 50
-    boot_disk_type              = "pd-balanced"
+    boot_disk_type              = "pd-standard"
     boot_disk_resource_policies = []
     network_name                = null
     network_ip                  = ""
@@ -73,12 +73,7 @@ variable "compute_instance_default" {
     enable_vtpm                 = true
     attached_disks              = {}
   }
-
-  validation {
-    condition     = var.compute_instance_default.boot_disk_size >= 10
-    error_message = "boot_disk_size must be at least 10 GB (GCP minimum)."
-  }
-
+ 
   validation {
     condition = contains(
       ["pd-standard", "pd-ssd", "pd-balanced", "pd-extreme", "hyperdisk-balanced", "hyperdisk-throughput", "hyperdisk-extreme"],

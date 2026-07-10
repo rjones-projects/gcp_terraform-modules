@@ -2,10 +2,9 @@ locals {
   project_id = var.project_id
   network    = try(var.network.spec[0], null)
 
-  region                  = coalesce(try(local.network.region, null), var.region)
-  auto_create_subnetworks = coalesce(try(local.network.auto_create_subnetworks, null), var.auto_create_subnetworks)
-  routing_mode            = coalesce(try(local.network.routing_mode, null), var.routing_mode)
-  description             = try(local.network.description, null) != null ? local.network.description : var.description
+  region       = coalesce(try(local.network.region, null), var.region)
+  routing_mode = coalesce(try(local.network.routing_mode, null), var.routing_mode)
+  description  = try(local.network.description, null) != null ? local.network.description : var.description
 
   finops_spec_key = "${coalesce(
     try(local.network.finops_resource_type, null),
@@ -118,24 +117,30 @@ locals {
   # Subnets
   subnets_from_network = var.network != null ? [
     for subnet in try(local.network.subnets, []) : {
-      name                  = subnet.name
-      ip_cidr_range         = subnet.ip_cidr_range
-      region                = try(subnet.region, null)
-      allow_nat             = try(subnet.allow_nat, null)
-      enable_private_access = try(subnet.enable_private_access, null)
-      flow_logs_config      = try(subnet.flow_logs_config, null)
-      secondary_ip_ranges   = try(subnet.secondary_ip_ranges, [])
+      name                             = subnet.name
+      custom_subnet_name               = try(subnet.custom_subnet_name, "") != "" ? subnet.custom_subnet_name : null
+      description                      = try(subnet.description, null)
+      ip_cidr_range                    = subnet.ip_cidr_range
+      region                           = try(subnet.region, null)
+      allow_nat                        = try(subnet.allow_nat, null)
+      enable_private_access            = try(subnet.enable_private_access, null)
+      flow_logs_config                 = try(subnet.flow_logs_config, null)
+      secondary_ip_ranges              = try(subnet.secondary_ip_ranges, [])
+      send_secondary_ip_range_if_empty = try(subnet.send_secondary_ip_range_if_empty, null)
     }
   ] : []
   subnets_from_input = var.subnets != null ? [
     for subnet in var.subnets : {
-      name                  = subnet.name
-      ip_cidr_range         = subnet.ip_cidr_range
-      region                = try(subnet.region, null)
-      allow_nat             = try(subnet.allow_nat, null)
-      enable_private_access = try(subnet.enable_private_access, null)
-      flow_logs_config      = try(subnet.flow_logs_config, null)
-      secondary_ip_ranges   = try(subnet.secondary_ip_ranges, [])
+      name                             = subnet.name
+      custom_subnet_name               = try(subnet.custom_subnet_name, "") != "" ? subnet.custom_subnet_name : null
+      description                      = try(subnet.description, null)
+      ip_cidr_range                    = subnet.ip_cidr_range
+      region                           = try(subnet.region, null)
+      allow_nat                        = try(subnet.allow_nat, null)
+      enable_private_access            = try(subnet.enable_private_access, null)
+      flow_logs_config                 = try(subnet.flow_logs_config, null)
+      secondary_ip_ranges              = try(subnet.secondary_ip_ranges, [])
+      send_secondary_ip_range_if_empty = try(subnet.send_secondary_ip_range_if_empty, null)
     }
   ] : []
 
@@ -145,22 +150,28 @@ locals {
     local.subnets_from_input,
     [
       {
-        name                  = "public"
-        ip_cidr_range         = cidrsubnet(local.valid_subnet_range, local.network_size_step, 1)
-        region                = local.region
-        allow_nat             = true
-        secondary_ip_ranges   = []
-        flow_logs_config      = null
-        enable_private_access = null
+        name                             = "public"
+        custom_subnet_name               = null
+        description                      = null
+        ip_cidr_range                    = cidrsubnet(local.valid_subnet_range, local.network_size_step, 1)
+        region                           = local.region
+        allow_nat                        = true
+        secondary_ip_ranges              = []
+        flow_logs_config                 = null
+        enable_private_access            = null
+        send_secondary_ip_range_if_empty = null
       },
       {
-        name                  = "private"
-        ip_cidr_range         = cidrsubnet(local.valid_subnet_range, local.network_size_step, 2)
-        allow_nat             = false
-        region                = local.region
-        secondary_ip_ranges   = []
-        flow_logs_config      = null
-        enable_private_access = null
+        name                             = "private"
+        custom_subnet_name               = null
+        description                      = null
+        ip_cidr_range                    = cidrsubnet(local.valid_subnet_range, local.network_size_step, 2)
+        allow_nat                        = false
+        region                           = local.region
+        secondary_ip_ranges              = []
+        flow_logs_config                 = null
+        enable_private_access            = null
+        send_secondary_ip_range_if_empty = null
       }
     ]
   )

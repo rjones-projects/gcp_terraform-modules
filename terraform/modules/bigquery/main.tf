@@ -71,6 +71,18 @@ resource "google_bigquery_dataset_iam_binding" "readers" {
   ))
 }
 
+resource "google_bigquery_dataset_iam_binding" "metadata_viewers" {
+  for_each = { for k, v in local.dataset_map : k => v if lookup(v, "iam_metadata", null) != null }
+
+  dataset_id = google_bigquery_dataset.main[each.key].dataset_id
+  role       = "roles/bigquery.metadataViewer"
+  members = distinct(concat(
+    [for group in lookup(each.value.iam_metadata, "groups", []) : "group:${group}"],
+    [for sa in lookup(each.value.iam_metadata, "service_accounts", []) : "serviceAccount:${sa}"],
+    [for sp in lookup(each.value.iam_metadata, "special_groups", []) : sp],
+    [for user in lookup(each.value.iam_metadata, "users", []) : "user:${user}"]
+  ))
+}
 
 resource "google_bigquery_dataset_iam_binding" "users" {
   for_each = { for k, v in local.dataset_map : k => v if lookup(v, "iam_users", null) != null }

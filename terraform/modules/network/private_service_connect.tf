@@ -37,8 +37,10 @@ resource "google_compute_network_peering_routes_config" "peering_primary_routes"
 
   # exporting custom routes is required to allow peered networks to use Transparent Squid.
   # enabled for cloud_build_worker_pool
-  export_custom_routes = true
-  import_custom_routes = false
+  export_custom_routes                = coalesce(try(local.network.export_custom_routes, null), var.export_custom_routes)
+  import_custom_routes                = coalesce(try(local.network.import_custom_routes, null), var.import_custom_routes)
+  export_subnet_routes_with_public_ip = coalesce(try(local.network.export_subnet_routes_with_public_ip, null), var.export_subnet_routes_with_public_ip)
+  import_subnet_routes_with_public_ip = coalesce(try(local.network.import_subnet_routes_with_public_ip, null), var.import_subnet_routes_with_public_ip)
 
   depends_on = [google_service_networking_connection.private_vpc_connection]
 }

@@ -9,13 +9,13 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.2
+    version: v1.0.5
   depends_on: []
   spec:
 
 network:
   source:
-    version: v1.1.3
+    version: v1.1.10
   depends_on:
     - finops_labels
   spec:
@@ -33,7 +33,8 @@ network:
 # Only custom rules defined in ingress_rules / egress_rules will apply.
 
 firewall:
-  source: "../modules/firwall"
+  source:
+    version: v1.0.5
   depends_on:
     - network
   spec:

@@ -67,9 +67,9 @@ resource "google_artifact_registry_repository" "registry" {
   dynamic "remote_repository_config" {
     for_each = each.value.mode_string == "remote" ? [""] : []
     content {
-      disable_upstream_validation = each.value.format_obj.remote.disable_upstream_validation
+      disable_upstream_validation = try(each.value.format_obj.remote.disable_upstream_validation, null)
       dynamic "upstream_credentials" {
-        for_each = each.value.format_obj.remote.upstream_credentials != null ? [""] : []
+        for_each = try(each.value.format_obj.remote.upstream_credentials, null) != null ? [""] : []
         content {
           username_password_credentials {
             username                = each.value.format_obj.remote.upstream_credentials.username
@@ -101,9 +101,9 @@ resource "google_artifact_registry_repository" "registry" {
           ? [""] : []
         )
         content {
-          public_repository = each.value.format_obj.remote.public_repository
+          public_repository = try(each.value.format_obj.remote.public_repository, null)
           dynamic "custom_repository" {
-            for_each = each.value.format_obj.remote.custom_repository != null ? [""] : []
+            for_each = try(each.value.format_obj.remote.custom_repository, null) != null ? [""] : []
             content {
               uri = each.value.format_obj.remote.custom_repository
             }
@@ -113,9 +113,9 @@ resource "google_artifact_registry_repository" "registry" {
       dynamic "maven_repository" {
         for_each = each.value.format_string == "maven" ? [""] : []
         content {
-          public_repository = each.value.format_obj.remote.public_repository
+          public_repository = try(each.value.format_obj.remote.public_repository, null)
           dynamic "custom_repository" {
-            for_each = each.value.format_obj.remote.custom_repository != null ? [""] : []
+            for_each = try(each.value.format_obj.remote.custom_repository, null) != null ? [""] : []
             content {
               uri = each.value.format_obj.remote.custom_repository
             }
@@ -125,9 +125,9 @@ resource "google_artifact_registry_repository" "registry" {
       dynamic "npm_repository" {
         for_each = each.value.format_string == "npm" ? [""] : []
         content {
-          public_repository = each.value.format_obj.remote.public_repository
+          public_repository = try(each.value.format_obj.remote.public_repository, null)
           dynamic "custom_repository" {
-            for_each = each.value.format_obj.remote.custom_repository != null ? [""] : []
+            for_each = try(each.value.format_obj.remote.custom_repository, null) != null ? [""] : []
             content {
               uri = each.value.format_obj.remote.custom_repository
             }
@@ -137,9 +137,9 @@ resource "google_artifact_registry_repository" "registry" {
       dynamic "python_repository" {
         for_each = each.value.format_string == "python" ? [""] : []
         content {
-          public_repository = each.value.format_obj.remote.public_repository
+          public_repository = try(each.value.format_obj.remote.public_repository, null)
           dynamic "custom_repository" {
-            for_each = each.value.format_obj.remote.custom_repository != null ? [""] : []
+            for_each = try(each.value.format_obj.remote.custom_repository, null) != null ? [""] : []
             content {
               uri = each.value.format_obj.remote.custom_repository
             }

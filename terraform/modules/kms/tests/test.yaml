@@ -13,7 +13,7 @@ finops_labels:
 
 kms:
   source:
-    version: v2.0.0
+    version: v3.0.0
   depends_on:
     - finops_labels
   spec:
@@ -87,3 +87,19 @@ kms:
             additive-c:
               role: "roles/cloudkms.cryptoKeyDecrypter"
               member: "serviceAccount:worker-c@project_id.iam.gserviceaccount.com"
+    
+    - keyring:
+        location: "europe-central2"
+        name: "test-keyring2"
+      keys:
+        test-key-d:
+          rotation_period: "7776000s"
+          destroy_scheduled_duration: "2592000s"
+          finops_resource_type: "kms"
+          labels:
+            vf_ngdi_data_layer: "bronze"
+            vf_ngdi_environment: "alpha"
+            vf_ngdi_shared: true
+            vf_ngdi_goal: "encrypt-at-rest"
+            vf_ngdi_domain: "pltfrm"
+

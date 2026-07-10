@@ -16,14 +16,14 @@ locals {
           members = members
         }
       ]
-      retention_policy      = try(item.retention_policy, var.bucket_default.retention_policy)
-      logging               = try(item.logging, var.bucket_default.logging)
-      lifecycle_rules       = try(item.lifecycle_rules, var.bucket_default.lifecycle_rules)
-      autoclass             = length(try(item.lifecycle_rules, [])) > 0 ? false : try(item.autoclass, var.bucket_default.autoclass)
-      iam_bindings          = try(item.iam_bindings, var.bucket_default.iam_bindings)
-      iam_bindings_additive = try(item.iam_bindings_additive, var.bucket_default.iam_bindings_additive)
-      objects_to_upload     = try(item.objects_to_upload, var.bucket_default.objects_to_upload)
-
+      retention_policy         = try(item.retention_policy, var.bucket_default.retention_policy)
+      logging                  = try(item.logging, var.bucket_default.logging)
+      lifecycle_rules          = try(item.lifecycle_rules, var.bucket_default.lifecycle_rules)
+      autoclass                = length(try(item.lifecycle_rules, [])) > 0 ? false : try(item.autoclass, var.bucket_default.autoclass)
+      iam_bindings             = try(item.iam_bindings, var.bucket_default.iam_bindings)
+      iam_bindings_additive    = try(item.iam_bindings_additive, var.bucket_default.iam_bindings_additive)
+      objects_to_upload        = try(item.objects_to_upload, var.bucket_default.objects_to_upload)
+      public_access_prevention = contains(["enforced", "inherited"], try(item.public_access_prevention, "")) ? item.public_access_prevention : var.bucket_default.public_access_prevention
     }
   ]
 
@@ -59,17 +59,13 @@ locals {
   iam_bindings_map = {
     for entry in flatten([
       for b_key, b_val in local.buckets : [
-        for iam_val in b_val.iam_bindings : [
-          for k, v in iam_val : {
-            # for memb in v.members : {
-            unique_key = "${b_val.bucket_name}-${k}-${v.role}"
-            bucket_id  = b_val.bucket_name
-            role       = v.role
-            members    = v.members
-            condition  = try(v.condition, [])
-            # } 
-          }
-        ]
+        for k, v in b_val.iam_bindings : {
+          unique_key = "${b_val.bucket_name}-${k}-${v.role}"
+          bucket_id  = b_val.bucket_name
+          role       = v.role
+          members    = v.members
+          condition  = try(v.condition, [])
+        }
       ]
       ]) : entry.unique_key => {
       bucket_id = entry.bucket_id
@@ -82,15 +78,13 @@ locals {
   iam_bindings_additive_map = {
     for entry in flatten([
       for b_key, b_val in local.buckets : [
-        for iam_val in b_val.iam_bindings_additive : [
-          for k, v in iam_val : {
-            unique_key = "${b_val.bucket_name}-${k}-${v.role}"
-            bucket_id  = b_val.bucket_name
-            role       = v.role
-            member     = v.member
-            condition  = try(v.condition, [])
-          }
-        ]
+        for k, v in b_val.iam_bindings_additive : {
+          unique_key = "${b_val.bucket_name}-${k}-${v.role}"
+          bucket_id  = b_val.bucket_name
+          role       = v.role
+          member     = v.member
+          condition  = try(v.condition, [])
+        }
       ]
       ]) : entry.unique_key => {
       bucket_id = entry.bucket_id

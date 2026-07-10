@@ -8,7 +8,7 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.2
+    version: v1.0.5
   depends_on:
   spec:
     - name: "project/default"
@@ -16,6 +16,8 @@ finops_labels:
       resource_name: null
       input_labels:
         vf_ngdi_environment: "alpha"
+        # Use this to overwrite default resource name
+        vf_ngdi_resource_name: "resource_name_label"
         vf_ngdi_owner: "platform-team@example.com"
         vf_ngdi_shared: "false"
         vf_ngdi_goal: "foundation"

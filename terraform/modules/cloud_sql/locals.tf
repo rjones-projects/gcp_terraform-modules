@@ -42,5 +42,6 @@ locals {
       input_labels  = cloud_sql_configuration.labels
     }
   ]
-  
+
+
 }

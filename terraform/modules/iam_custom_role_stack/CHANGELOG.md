@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.8] - 2026-06-18
+### Added
+- Added roles/run.admin to default base roles
+
+## [1.0.7] - 2026-06-18
+### Added
+- Adding new permissions (compute.NetworkAdmin) role
+
+## [1.0.6] - 2026-05-12
+### Fixed
+- Exclude `compute.orgRollouts` from merged permissions by default so project custom role creation stays compatible when this permission is expanded from base roles or listed in 
+
+
+
+## [1.0.5] - 2026-05-12
+### Fixed
+- Exclude `servicenetworking.services.deletePeering` from merged permissions by default so project custom role creation stays compatible when this permission is expanded from base roles or listed in 
+
+
 ## [1.0.4] - 2026-04-13
 ### Fixed
 - Exclude `iam.googleapis.com/workforcePoolProviderKeys.create` from merged permissions so project custom role creation succeeds when `roles/iam.admin` is expanded (GCP rejects this permission in project custom roles).

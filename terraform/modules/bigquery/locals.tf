@@ -30,6 +30,7 @@ locals {
     iam_writers                 = try(dataset.iam.writers, null)
     iam_readers                 = try(dataset.iam.readers, null)
     iam_users                   = try(dataset.iam.users, null)
+    iam_metadata                = try(dataset.iam.metadata_viewers, null)
     region                      = dataset.region
     finops_resource_type        = dataset.finops_resource_type
     labels                      = dataset.labels

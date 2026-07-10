@@ -8,6 +8,7 @@ When using an existing keyring be mindful about applying IAM bindings, as all bi
 - [Protecting against destroy](#protecting-against-destroy)
 - [Examples](#examples)
   - [Keyring creation and crypto key rotation and IAM roles](#keyring-creation-and-crypto-key-rotation-and-iam-roles)
+  - [Multiple keyrings](#multiple-keyrings)
   - [Using an existing keyring](#using-an-existing-keyring)
   - [Crypto key purpose](#crypto-key-purpose)
   - [Import job](#import-job)
@@ -59,6 +60,45 @@ module "kms" {
 }
 # tftest modules=1 resources=6 inventory=basic.yaml e2e
 ```
+
+### Multiple keyrings
+
+Each item in `kms.spec` creates a separate keyring. Keys and IAM are scoped to their keyring entry.
+
+```hcl
+module "kms" {
+  source     = "./fabric/modules/kms"
+  project_id = var.project_id
+  kms = {
+    spec = [
+      {
+        keyring = {
+          location = var.region
+          name     = "${var.prefix}-gcs"
+        }
+        keys = {
+          cmek-gcs = {
+            rotation_period = "7776000s"
+          }
+        }
+      },
+      {
+        keyring = {
+          location = var.region
+          name     = "${var.prefix}-sql"
+        }
+        keys = {
+          cmek-sql = {
+            rotation_period = "7776000s"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+When multiple keyrings are configured, use the `keyrings` output (map keyed by `location/name`) and composite `key_ids` keys (`location/name/key-name`).
 
 ### Using an existing keyring
 
@@ -172,11 +212,13 @@ module "kms" {
 
 | name | description | sensitive |
 |---|---|:---:|
-| [id](outputs.tf#L17) | Fully qualified keyring id. |  |
-| [import_job](outputs.tf#L30) | Keyring import job resources. |  |
-| [key_ids](outputs.tf#L43) | Fully qualified key ids. |  |
-| [keyring](outputs.tf#L56) | Keyring resource. |  |
-| [keys](outputs.tf#L69) | Key resources. |  |
-| [location](outputs.tf#L82) | Keyring location. |  |
-| [name](outputs.tf#L95) | Keyring name. |  |
+| [id](outputs.tf#L17) | Fully qualified keyring id when exactly one keyring is managed. |  |
+| [import_job](outputs.tf#L30) | Keyring import job resources for single-keyring mode. |  |
+| [import_jobs](outputs.tf#L43) | Keyring import job resources keyed by location/name. |  |
+| [key_ids](outputs.tf#L56) | Fully qualified key ids. |  |
+| [keyring](outputs.tf#L69) | Keyring resource when exactly one keyring is managed. |  |
+| [keyrings](outputs.tf#L82) | Keyring resources keyed by location/name. |  |
+| [keys](outputs.tf#L95) | Key resources. |  |
+| [location](outputs.tf#L108) | Keyring location when exactly one keyring is managed. |  |
+| [name](outputs.tf#L121) | Keyring name when exactly one keyring is managed. |  |
 <!-- END TFDOC -->

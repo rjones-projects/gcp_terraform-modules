@@ -42,16 +42,15 @@ gcs:
 
 iam_service_account:
   source:
-    version: v1.0.3
+    version: v1.1.0
   depends_on:
     - gcs
   spec: 
     - name: "squid-sa"
       display_name: "Squid service account"
       iam_project_roles:
-        "project_id":
-          - "roles/logging.logWriter"
-          - "roles/monitoring.metricWriter"
+        - "roles/logging.logWriter"
+        - "roles/monitoring.metricWriter"
       iam_storage_roles:
         "unique-bucket_name":
           - "roles/storage.objectViewer"         
@@ -101,7 +100,7 @@ network:
     
 transparent_squid_egress:
   source:
-    version: v1.0.1
+    version: v1.0.2
   depends_on:
     - network
     - gcs
@@ -122,7 +121,7 @@ transparent_squid_egress:
       enable_blue_green_deployment: true
       kms_key: "projects/project_id/locations/europe-west2/keyRings/keyring-project_id-europe-west2-gcs/cryptoKeys/cmek-project_id-europe-west2-gcs"
       sa_email: "squid-sa@project_id.iam.gserviceaccount.com"
-      bucket_name: "unique-bucket_name"
+      bucket_name: "unique-bucket-name"
 
       tls_inspection_bypass:
         - "docker.io"

@@ -9,8 +9,11 @@ locals {
   topics = [
     for topic in local.topic_specs : merge(topic, {
       regions              = tolist(try(topic.regions, var.topic_default.regions))
+      ignore_creation      = try(topic.ignore_creation, var.topic_default.ignore_creation)
+      project_id           = try(topic.project_id, var.project_id)
       finops_resource_type = coalesce(try(topic.finops_resource_type, null), var.topic_default.finops_resource_type)
       labels               = { for k, v in try(topic.labels, var.topic_default.labels) : tostring(k) => tostring(v) }
+      iam_bindings         = try(topic.iam_bindings, var.topic_default.iam_bindings)
       subscriptions = [
         for sub in try(topic.subscriptions, var.topic_default.subscriptions) : merge(var.subscription_default, sub, {
           finops_resource_type = coalesce(try(sub.finops_resource_type, null), var.subscription_default.finops_resource_type)
@@ -29,6 +32,20 @@ locals {
 
   topic_map = { for topic in local.topics : topic.topic_name => topic }
 
+  topic_iam_binding_pairs = flatten([
+    for topic in local.topics : [
+      for member, roles in topic.iam_bindings : [
+        for role in roles : {
+          name       = topic.topic_name
+          member     = member
+          role       = role
+          project_id = topic.project_id
+        }
+      ]
+    ]
+    if !topic.ignore_creation
+  ])
+
   schema_topics = {
     for topic in local.topics : topic.topic_name => topic
     if topic.schema != null
@@ -39,6 +56,7 @@ locals {
       for sub in topic.subscriptions : merge(sub, {
         key                        = "${topic.topic_name}/${sub.name}"
         topic_name                 = topic.topic_name
+        ignore_creation            = topic.ignore_creation
         topic_finops_resource_type = topic.finops_resource_type
         subscription_name          = sub.name
       })
@@ -54,10 +72,13 @@ locals {
     for notification in flatten([
       for topic in local.topics : [
         for idx, n in try(topic.notifications, []) : merge(n, {
-          key            = "${topic.topic_name}/${idx}"
-          topic_name     = topic.topic_name
-          bucket         = tostring(n.bucket)
-          payload_format = try(n.payload_format, "JSON_API_V1")
+          key             = "${topic.topic_name}/${idx}"
+          topic_name      = topic.topic_name
+          ignore_creation = topic.ignore_creation
+          project_id      = topic.project_id
+          bucket          = tostring(n.bucket)
+          payload_format  = try(n.payload_format, "JSON_API_V1")
+          prefix          = try(n.prefix, null)
         })
         if try(n.bucket, "") != ""
       ]
@@ -65,8 +86,12 @@ locals {
   }
 
   topic_notification_pubsub_publishers = {
-    for topic_name in distinct(values(local.topic_notification_map)[*].topic_name) :
-    topic_name => topic_name
+    for topic in distinct(values(local.topic_notification_map)) :
+    topic.topic_name => {
+      topic_name = topic.topic_name
+      project_id = topic.project_id
+    }
+    if !topic.ignore_creation
   }
 
   finops_specs = concat(

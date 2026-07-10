@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-06-05
+### Updated
+- Changed how project roles are assigned. Project ids can no longer be provided, project roles can only be granted in the YAML file's project, based on the project_id.
+- Service account reuse is now a flag, to use an sa from another project set to true  
+
+## [1.0.6] - 2026-05-21
+### Fixed
+- Fixed clash with multiple IAM bindings 
+
+## [1.0.5] - 2026-05-21
+### Fixed
+- Fixed issue with IAM bindings 
+
 ## [1.0.4] - 2026-03-05
 ### Added
 - Added IAM bindings, allows you to add users or SAs to impersonate the created sa 

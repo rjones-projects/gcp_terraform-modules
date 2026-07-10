@@ -4,7 +4,7 @@ resource "google_cloudbuild_worker_pool" "pool" {
 
   name     = each.value.name
   project  = var.project_id
-  location = var.region
+  location = each.value.region
 
   dynamic "worker_config" {
     for_each = try(each.value.worker_config, null) == null ? [] : [""]

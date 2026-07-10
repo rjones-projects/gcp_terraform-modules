@@ -50,4 +50,9 @@ locals {
       ]
     ]) : pair.key => pair
   }
+
+  iam_enabled = length([
+    for secret_id, cfg in local.secrets : secret_id
+    if(cfg.create_binding && length(cfg.members) > 0) || length(cfg.iam_bindings) > 0
+  ]) > 0
 }

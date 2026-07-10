@@ -9,7 +9,7 @@ terraform:
 
 artifact_registry:
   source:
-    version: v1.0.4
+    version: v1.0.6
   spec:
     - name: "my-new-artifact-repo"
       format: 
@@ -40,13 +40,13 @@ artifact_registry:
         "roles/artifactregistry.admin" : ["group:cicd@example.com"]
       iam_bindings:
         storage_admin_with_delegated_roles :
-          - members: 
-            - "allAuthenticatedUsers"
-            role: "roles/storage.admin"
-            condition:
-            # - expression: "expression_here"
-            #   title: "title_here"
-            #   description: "description_here"
+          members: 
+          - "allAuthenticatedUsers"
+          role: "roles/storage.admin"
+          condition:
+          # - expression: "expression_here"
+          #   title: "title_here"
+          #   description: "description_here"
       iam_bindings_additive:
         "storage_admin_with_delegated_roles" :
           - member: "allAuthenticatedUsers"

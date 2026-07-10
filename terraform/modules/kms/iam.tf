@@ -1,18 +1,18 @@
 locals {
   key_iam = flatten([
-    for k, v in local.keys : [
+    for ck, v in local.crypto_keys_unified : [
       for role, members in v.iam : {
-        key     = k
+        key     = ck
         role    = role
         members = members
       }
     ]
   ])
   key_iam_bindings = merge([
-    for k, v in local.keys : {
+    for ck, v in local.crypto_keys_unified : {
       for binding_key, data in v.iam_bindings :
-      binding_key => {
-        key       = k
+      (local.multi_keyring_mode ? "${ck}/${binding_key}" : binding_key) => {
+        key       = ck
         role      = data.role
         members   = data.members
         condition = data.condition
@@ -20,10 +20,10 @@ locals {
     }
   ]...)
   key_iam_bindings_additive = merge([
-    for k, v in local.keys : {
+    for ck, v in local.crypto_keys_unified : {
       for binding_key, data in v.iam_bindings_additive :
-      binding_key => {
-        key       = k
+      (local.multi_keyring_mode ? "${ck}/${binding_key}" : binding_key) => {
+        key       = ck
         role      = data.role
         member    = data.member
         condition = data.condition
@@ -33,15 +33,15 @@ locals {
 }
 
 resource "google_kms_key_ring_iam_binding" "authoritative" {
-  for_each    = local.iam
-  key_ring_id = local.keyring.id
-  role        = each.key
-  members     = each.value
+  for_each    = local.keyring_iam_authoritative
+  key_ring_id = local.keyring_by_key[each.value.keyring_key].id
+  role        = each.value.role
+  members     = each.value.members
 }
 
 resource "google_kms_key_ring_iam_binding" "bindings" {
-  for_each    = local.iam_bindings
-  key_ring_id = local.keyring.id
+  for_each    = local.keyring_iam_bindings
+  key_ring_id = local.keyring_by_key[each.value.keyring_key].id
   role        = each.value.role
   members     = each.value.members
   dynamic "condition" {
@@ -55,8 +55,8 @@ resource "google_kms_key_ring_iam_binding" "bindings" {
 }
 
 resource "google_kms_key_ring_iam_member" "bindings" {
-  for_each    = local.iam_bindings_additive
-  key_ring_id = local.keyring.id
+  for_each    = local.keyring_iam_bindings_additive
+  key_ring_id = local.keyring_by_key[each.value.keyring_key].id
   role        = each.value.role
   member      = each.value.member
   dynamic "condition" {

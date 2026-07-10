@@ -58,7 +58,7 @@ variable "function_default" {
     }))
     service_account_email = string
     trigger_config = object({
-      event_type   = string
+      event_type   = optional(string)
       pubsub_topic = optional(string)
       region       = optional(string)
       event_filters = optional(list(object({
@@ -67,8 +67,12 @@ variable "function_default" {
         operator  = optional(string)
       })))
       retry_policy                  = optional(string)
-      trigger_service_account_email = string
+      trigger_service_account_email = optional(string)
       service_Account_create        = optional(bool)
+      # HTTP trigger (Gen2): set http to true; no event_trigger block; invoke via service_config.uri + roles/run.invoker
+      http                  = optional(bool)
+      allow_unauthenticated = optional(bool)
+      security_level        = optional(string) # YAML metadata only (Gen1); not applied by this module
     })
 
     vpc_connector = object({
@@ -84,7 +88,7 @@ variable "function_default" {
     build_worker_pool           = null
     bundle_path                 = null
     bundle_name                 = null
-    description                 = "Terraform managed"
+    description                 = "Terraform managed."
     direct_vpc_egress           = null
     docker_repository_id        = null
     environment_variables       = { LOG_EXECUTION_ID = "true" }

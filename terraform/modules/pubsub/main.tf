@@ -21,7 +21,10 @@ resource "google_pubsub_schema" "schema" {
 }
 
 resource "google_pubsub_topic" "topic" {
-  for_each = local.topic_map
+  for_each = {
+    for topic_name, topic in local.topic_map : topic_name => topic
+    if !topic.ignore_creation
+  }
 
   project                    = var.project_id
   name                       = each.key
@@ -51,22 +54,33 @@ resource "google_pubsub_topic" "topic" {
 resource "google_pubsub_topic_iam_member" "storage_notification_publisher" {
   for_each = local.topic_notification_pubsub_publishers
 
-  project = var.project_id
-  topic   = google_pubsub_topic.topic[each.key].name
+  project = each.value.project_id
+  topic   = contains(keys(google_pubsub_topic.topic), each.key) ? google_pubsub_topic.topic[each.key].name : each.value.project_id == var.project_id ? each.key : "projects/${each.value.project_id}/topics/${each.key}"
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${data.google_storage_project_service_account.storage_sa[0].email_address}"
+}
+
+resource "google_pubsub_topic_iam_member" "iam_bindings" {
+  for_each = {
+    for pair in local.topic_iam_binding_pairs :
+    "${pair.name}-${pair.member}-${pair.role}" => pair
+  }
+
+  project = each.value.project_id
+  topic   = contains(keys(google_pubsub_topic.topic), each.value.name) ? google_pubsub_topic.topic[each.value.name].name : each.value.project_id == var.project_id ? each.value.name : "projects/${each.value.project_id}/topics/${each.value.name}"
+  role    = each.value.role
+  member  = each.value.member
 }
 
 resource "google_storage_notification" "bucket_uploads" {
   for_each = local.topic_notification_map
 
   bucket             = each.value.bucket
-  topic              = google_pubsub_topic.topic[each.value.topic_name].id
+  topic              = !each.value.ignore_creation ? google_pubsub_topic.topic[each.value.topic_name].id : "projects/${each.value.project_id}/topics/${each.value.topic_name}"
   payload_format     = each.value.payload_format
   event_types        = try(each.value.event_types, null)
-  object_name_prefix = try(each.value.object_name_prefix, null)
+  object_name_prefix = try(each.value.prefix, null)
   custom_attributes  = try(each.value.custom_attributes, null)
-
   depends_on = [
     google_pubsub_topic_iam_member.storage_notification_publisher
   ]
@@ -77,7 +91,7 @@ resource "google_pubsub_subscription" "subscription" {
 
   project                      = var.project_id
   name                         = each.value.subscription_name
-  topic                        = google_pubsub_topic.topic[each.value.topic_name].name
+  topic                        = !each.value.ignore_creation ? google_pubsub_topic.topic[each.value.topic_name].name : each.value.topic_name
   ack_deadline_seconds         = each.value.ack_deadline_seconds
   message_retention_duration   = each.value.message_retention_duration
   retain_acked_messages        = each.value.retain_acked_messages

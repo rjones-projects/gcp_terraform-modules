@@ -8,7 +8,7 @@ terraform:
 
 iam_custom_role_stack:
   source:
-    version: v1.0.3
+    version: v1.0.6
   depends_on: []
   spec:
     - target_project_ids:
@@ -20,8 +20,7 @@ iam_custom_role_stack:
       title: "NGDI Platform Admin"
       description: "Custom role for NGDI Terraform deployments"
       resolve_base_roles: false
-      additional_permissions: 
+      additional_permissions:
         - "servicenetworking.services.addPeering"
-        - "servicenetworking.services.deletePeering"
       members: 
         - "serviceAccount:ngdi-terraform-alpha@vf-gned-ngdi-alpha-orch.iam.gserviceaccount.com"

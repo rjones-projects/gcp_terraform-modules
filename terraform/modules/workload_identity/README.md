@@ -96,6 +96,7 @@ Each `workload_identity.spec` item supports:
 - `provider_id` (string, default `"github2-provider2"`)
 - `display_name` (string, optional)
 - `description` (string, optional)
+- `google_subject` (string, optional, `"assertion.sub"`)
 
 ## Outputs
 

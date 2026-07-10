@@ -82,8 +82,8 @@ resource "google_cloud_run_v2_job" "job" {
           dynamic "ports" {
             for_each = coalesce(try(containers.value.ports, tomap({})), tomap({}))
             content {
-              container_port = ports.value.container_port
-              name           = ports.value.name
+              container_port = try(ports.value.container_port, null)
+              name           = try(ports.value.name, null)
             }
           }
           dynamic "volume_mounts" {

@@ -8,13 +8,13 @@ terraform:
 
 finops_labels:
   source:
-    version: v1.0.1
+    version: v1.0.5
   depends_on: []
   spec:
 
 bigquery:
   source:
-    version: v1.0.7
+    version: v1.0.8
   depends_on:
     - finops_labels
   spec:

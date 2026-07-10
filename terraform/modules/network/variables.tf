@@ -15,12 +15,6 @@ variable "network" {
   default     = null
 }
 
-variable "auto_create_subnetworks" {
-  type        = bool
-  default     = false
-  description = "Whether to create subnetworks automatically."
-}
-
 variable "routing_mode" {
   type        = string
   default     = "REGIONAL"
@@ -226,7 +220,7 @@ variable "nat_log_filter" {
   }
 }
 variable "create_googleapis_dns" {
-  description = "Create Cloud DNS private zones for googleapis.com and gcr.io"
+  description = "Create Cloud DNS private zones for googleapis.com, gcr.io, and pkg.dev"
   type        = bool
   default     = true
 }
@@ -253,3 +247,26 @@ variable "allow_metadata_server_egress" {
   default     = true
 }
 
+variable "export_custom_routes" {
+  description = "Export custom routes on the servicenetworking peering (PSC). Set true when peered networks need custom route export."
+  type        = bool
+  default     = true
+}
+
+variable "import_custom_routes" {
+  description = "Import custom routes on the servicenetworking peering (PSC)."
+  type        = bool
+  default     = false
+}
+
+variable "export_subnet_routes_with_public_ip" {
+  description = "Export subnet routes with public IP on the servicenetworking peering (PSC)."
+  type        = bool
+  default     = false
+}
+
+variable "import_subnet_routes_with_public_ip" {
+  description = "Import subnet routes with public IP on the servicenetworking peering (PSC)."
+  type        = bool
+  default     = false
+}

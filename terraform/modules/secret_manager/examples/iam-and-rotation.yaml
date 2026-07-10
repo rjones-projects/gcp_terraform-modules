@@ -9,7 +9,7 @@ terraform:
 
 secret_manager:
   source:
-    version: v1.0.1
+    version: v1.0.3
   depends_on: []
   spec:
     - secret_id: "oauth-client-secret"

@@ -31,9 +31,17 @@ variable "gke_autopilot_cluster_default" {
     security_posture_mode               = string
     security_posture_vulnerability_mode = string
     enable_gateway_api                  = bool
-    maintenance_start_time              = string
-    cmek_key_id                         = string
-    sa_name                             = string
+    enable_secret_manager_addon         = bool
+    secret_sync_config = object({
+      enabled = bool
+      rotation_config = optional(object({
+        enabled           = optional(bool)
+        rotation_interval = optional(string)
+      }))
+    })
+    maintenance_start_time = string
+    cmek_key_id            = string
+    sa_name                = string
   })
   default = {
     service_name                        = null
@@ -55,8 +63,12 @@ variable "gke_autopilot_cluster_default" {
     security_posture_mode               = "BASIC"
     security_posture_vulnerability_mode = "VULNERABILITY_BASIC"
     enable_gateway_api                  = false
-    maintenance_start_time              = "03:00"
-    cmek_key_id                         = null
-    sa_name                             = null
+    enable_secret_manager_addon         = true
+    secret_sync_config = {
+      enabled = true
+    }
+    maintenance_start_time = "03:00"
+    cmek_key_id            = null
+    sa_name                = null
   }
 }

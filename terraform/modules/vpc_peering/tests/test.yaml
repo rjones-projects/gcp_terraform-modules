@@ -1,0 +1,52 @@
+project_id: "vf-gned-ngdi-pltfrm-alpha-orch"
+region: "europe-west3"
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+
+finops_labels:
+  source:
+    version: v1.0.5
+  depends_on: []
+  spec:
+
+network:
+  source:
+    version: v1.1.6
+  depends_on:
+    - finops_labels
+  spec:
+    - name: "test-vpc"
+      finops_resource_type: "networking"
+      labels:
+        vf_ngdi_environment: "alpha"
+        vf_ngdi_shared: "true"
+        vf_ngdi_goal: "networking"
+        vf_ngdi_location: "europe-west3"
+      auto_create_subnetworks: false
+      subnets:
+        - name: "trusted"
+          region: "europe-west3"
+          ip_cidr_range: "172.21.22.0/24"
+          enable_private_access: true
+
+vpc_peering:
+  source:
+    version: v1.0.0
+  depends_on:
+    - network
+  spec:
+    - name: "test-peering-remote"
+      prefix: "ngdi-test"
+      local_network: "projects/vf-gned-ngdi-pltfrm-alpha-etl/global/networks/vf-gned-ngdi-pltfrm-alpha-etl-vpc"
+      peer_network: "projects/vf-nwp-cntr-nonlive/global/networks/test-remote-vpc"
+      peer_create_peering: false
+      peering_names:
+        local: "local-to-remote"
+        peer: "remote-to-local"
+      routes_config:
+        local:
+          import: true
+          export: true

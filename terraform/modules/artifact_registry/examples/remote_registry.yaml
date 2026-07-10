@@ -1,0 +1,53 @@
+project_id: "your-project-id"
+region: "your-region"
+env: beta
+
+terraform:
+  required_version: ">= 1.14.0, < 2.0.0"
+  providers:
+    google: ">= 7.17.0, < 8.0.0"
+    google-beta: ">= 7.17.0, < 8.0.0"
+
+artifact_registry:
+  source:
+    version: v1.0.6
+  spec:
+    # Docker Hub remote — public_repository only
+    - name: docker-hub-remote
+      location: europe-west3
+      description: Remote proxy for Docker Hub library images
+      format:
+        docker:
+          remote:
+            public_repository: DOCKER_HUB
+      labels:
+        vf_ngdi_environment: beta
+        vf_ngdi_shared: "true"
+        vf_cost_item: ngdi
+        vf_ngdi_domain: pltfrm
+    # Quay remote — custom_repository only
+    - name: quay-remote
+      location: europe-west3
+      description: Remote proxy for quay.io/argoproj
+      format:
+        docker:
+          remote:
+            custom_repository: https://quay.io/argoproj
+      labels:
+        vf_ngdi_environment: beta
+        vf_ngdi_shared: "true"
+        vf_cost_item: ngdi
+        vf_ngdi_domain: pltfrm
+    # GHCR remote — custom_repository only
+    - name: ghcr-remote
+      location: europe-west3
+      description: Remote proxy for ghcr.io/dexidp
+      format:
+        docker:
+          remote:
+            custom_repository: https://ghcr.io/dexidp
+      labels:
+        vf_ngdi_environment: beta
+        vf_ngdi_shared: "true"
+        vf_cost_item: ngdi
+        vf_ngdi_domain: pltfrm

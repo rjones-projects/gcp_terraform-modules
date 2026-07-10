@@ -8,7 +8,7 @@ terraform:
 
 cloud_build_private_worker_pool:
   source:
-    version: v1.0.1
+    version: v1.0.3
   depends_on: #[google_service_networking_connection.worker_pool_conn]
   spec:
     - name: "test-pool"
@@ -21,6 +21,7 @@ cloud_build_private_worker_pool:
         peered_network_ip_range: "/29"
     
     - name: "test-pool2"
+      region: europe-west1
       worker_config: 
         disk_size_gb: 100
         machine_type: "e2-standard-4"

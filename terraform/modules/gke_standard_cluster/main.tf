@@ -36,6 +36,27 @@ resource "google_container_cluster" "tenant_gke_cluster" {
     master_ipv4_cidr_block  = each.value.gke_master_cidr
   }
 
+  # DNS-based control-plane endpoint. Lets clients (e.g. a cross-project Argo CD
+  # control plane) reach the API server over a Google-managed DNS name resolved via
+  # the Google APIs path, gated by IAM (container.clusters.connect) instead of by
+  # IP allow-lists or VPC peering. Keeping allow_external_traffic = false means the
+  # endpoint is reachable only from within Google Cloud (Private Google Access) and
+  # never from the public internet, so the cluster stays private.
+  #
+  # All three dns_endpoint_config fields are set explicitly so provider >= 7.29.0
+  # sends them in the API request (ForceSendFields); omitting the k8s auth fields
+  # caused allow_external_traffic = false to be dropped on update (#26126, #26968).
+  dynamic "control_plane_endpoints_config" {
+    for_each = each.value.enable_dns_endpoint ? [1] : []
+    content {
+      dns_endpoint_config {
+        allow_external_traffic    = each.value.dns_endpoint_allow_external_traffic
+        enable_k8s_tokens_via_dns = each.value.enable_k8s_tokens_via_dns
+        enable_k8s_certs_via_dns  = each.value.enable_k8s_certs_via_dns
+      }
+    }
+  }
+
   ip_allocation_policy {
     cluster_ipv4_cidr_block       = can(regex("/", each.value.pods_cidr)) ? each.value.pods_cidr : null
     cluster_secondary_range_name  = can(regex("/", each.value.pods_cidr)) ? null : each.value.pods_cidr
@@ -44,9 +65,17 @@ resource "google_container_cluster" "tenant_gke_cluster" {
   }
 
   master_authorized_networks_config {
-    cidr_blocks {
-      display_name = "trusted-external"
-      cidr_block   = each.value.management_zone_cidr_range
+    dynamic "cidr_blocks" {
+      for_each = length(each.value.master_authorized_networks) > 0 ? each.value.master_authorized_networks : [
+        {
+          display_name = "trusted-external"
+          cidr_block   = each.value.management_zone_cidr_range
+        }
+      ]
+      content {
+        display_name = cidr_blocks.value.display_name
+        cidr_block   = cidr_blocks.value.cidr_block
+      }
     }
   }
 
@@ -169,6 +198,27 @@ resource "google_container_cluster" "tenant_gke_cluster" {
     channel = each.value.enable_gateway_api ? "CHANNEL_STANDARD" : "CHANNEL_DISABLED"
   }
 
+  dynamic "secret_manager_config" {
+    for_each = each.value.enable_secret_manager_addon ? [1] : []
+    content {
+      enabled = true
+    }
+  }
+
+  dynamic "secret_sync_config" {
+    for_each = each.value.secret_sync_config.enabled ? [1] : []
+    content {
+      enabled = true
+      dynamic "rotation_config" {
+        for_each = try(each.value.secret_sync_config.rotation_config, null) != null ? [each.value.secret_sync_config.rotation_config] : []
+        content {
+          enabled           = rotation_config.value.enabled
+          rotation_interval = rotation_config.value.rotation_interval
+        }
+      }
+    }
+  }
+
   maintenance_policy {
     daily_maintenance_window {
       start_time = each.value.maintenance_start_time
@@ -259,6 +309,12 @@ resource "google_container_node_pool" "primary_node_pool" {
   management {
     auto_upgrade = true
     auto_repair  = true
+  }
+
+  lifecycle {
+    ignore_changes = [
+      version
+    ]
   }
 
   depends_on = [google_container_cluster.tenant_gke_cluster]

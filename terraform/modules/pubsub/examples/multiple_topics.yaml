@@ -15,7 +15,7 @@ finops_labels:
 
 pubsub:
   source:
-    version: v1.0.2
+    version: v1.0.6
   depends_on:
     - finops_labels
   spec:

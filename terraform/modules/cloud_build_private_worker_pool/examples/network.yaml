@@ -9,7 +9,7 @@ terraform:
 
 cloud_build_private_worker_pool:
   source:
-    version: v1.0.2 
+    version: v1.0.3
   depends_on: 
     -network
   spec:

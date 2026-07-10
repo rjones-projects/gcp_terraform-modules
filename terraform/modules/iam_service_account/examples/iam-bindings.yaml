@@ -8,7 +8,7 @@ terraform:
 
 iam_service_account:
   source:
-    version: v1.0.4
+    version: v1.1.0
   depends_on: []
   spec: 
     - name: "sa-name"
