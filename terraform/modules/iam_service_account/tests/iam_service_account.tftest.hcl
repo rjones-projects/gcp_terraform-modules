@@ -9,22 +9,18 @@ variables {
       {
         name         = "test-dataform-sa"
         display_name = "Test Dataform Service Account"
-        iam_project_roles = {
-          "test-project-id" = [
-            "roles/dataform.serviceAgent",
-            "roles/bigquery.dataEditor"
-          ]
-        }
+        iam_project_roles = [
+          "roles/dataform.serviceAgent",
+          "roles/bigquery.dataEditor"
+        ]
       },
       {
         name         = "test-composer-sa"
         display_name = "Test Composer Service Account"
-        iam_project_roles = {
-          "test-project-id" = [
-            "roles/composer.worker",
-            "roles/iam.serviceAccountTokenCreator"
-          ]
-        }
+        iam_project_roles = [
+          "roles/composer.worker",
+          "roles/iam.serviceAccountTokenCreator"
+        ]
       }
     ]
   }

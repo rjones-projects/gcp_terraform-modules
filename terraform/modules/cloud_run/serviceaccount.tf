@@ -1,5 +1,5 @@
 locals {
-  service_account = local.cloud_run_spec.service_account_config
+  service_account = try(local.cloud_run_spec.service_account_config, var.service_account_config)
 
   service_account_email = (
     try(local.service_account.create, var.service_account_config.create)
@@ -15,7 +15,7 @@ locals {
 resource "google_service_account" "service_account" {
   count      = var.service_account_config.create ? 1 : 0
   project    = local.project_id
-  account_id = try(local.service_account.name, local.name)
+  account_id = coalesce(local.service_account.name, local.name)
   display_name = coalesce(
     try(local.service_account.display_name, var.service_account_config.display_name),
     try(local.service_account.name, var.service_account_config.name),
