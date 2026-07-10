@@ -247,7 +247,7 @@ variable "revision" {
     }))
     vpc_access = optional(object({
       connector = optional(string)
-      egress    = optional(string)
+      egress    = optional(string, "PRIVATE_RANGES_ONLY")
       network   = optional(string)
       subnet    = optional(string)
       tags      = optional(list(string))
@@ -301,6 +301,13 @@ variable "revision" {
     )
     error_message = "Either provide connector to create in var.vpc_connector_create or provide externally managed connector in var.revision.vpc_access.connector"
   }
+  validation {
+    condition = (
+      try(var.revision.node_selector.accelerator, null) == null ||
+      contains(["nvidia-l4", "nvidia-rtx-pro-6000"], var.revision.node_selector.accelerator)
+    )
+    error_message = "revision.node_selector.accelerator must be one of: nvidia-l4, nvidia-rtx-pro-6000."
+  }
 }
 
 variable "service_config" {
@@ -325,7 +332,7 @@ variable "service_config" {
       iam          = optional(list(string), [])
       iam_additive = optional(list(string), [])
     }), null)
-    ingress              = optional(string, null)
+    ingress              = optional(string, "INGRESS_TRAFFIC_ALL")
     invoker_iam_disabled = optional(bool, false)
     max_concurrency      = optional(number)
     scaling = optional(object({
@@ -429,6 +436,13 @@ variable "workerpool_config" {
   })
   default  = {}
   nullable = false
+  validation {
+    condition = (
+      try(var.workerpool_config.scaling.mode, null) == null ||
+      contains(["MANUAL", "AUTOMATIC"], var.workerpool_config.scaling.mode)
+    )
+    error_message = "workerpool_config.scaling.mode must be one of: MANUAL, AUTOMATIC."
+  }
 }
 
 variable "cloud_run" {

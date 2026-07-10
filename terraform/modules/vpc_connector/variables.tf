@@ -16,5 +16,15 @@ variable "vpc_connector" {
   default = {
     spec = []
   }
+
+  validation {
+    condition = alltrue([
+      for item in try(var.vpc_connector.spec, []) : (
+        try(item.machine_type, null) == null ||
+        contains(["f1-micro", "e2-micro", "e2-standard-4"], item.machine_type)
+      )
+    ])
+    error_message = "vpc_connector.spec[*].machine_type must be one of: f1-micro, e2-micro, e2-standard-4."
+  }
 }
 

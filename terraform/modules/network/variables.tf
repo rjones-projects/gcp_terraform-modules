@@ -19,6 +19,10 @@ variable "routing_mode" {
   type        = string
   default     = "REGIONAL"
   description = "Routing mode for the VPC network."
+  validation {
+    condition     = contains(["REGIONAL", "GLOBAL"], var.routing_mode)
+    error_message = "routing_mode must be one of: REGIONAL, GLOBAL."
+  }
 }
 
 variable "description" {
@@ -148,6 +152,12 @@ variable "nat_source_mode" {
   description = "Valid values are: ALL_SUBNETWORKS_ALL_IP_RANGES, ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES, and LIST_OF_SUBNETWORKS. See https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat#source_subnetwork_ip_ranges_to_nat"
   type        = string
   default     = "LIST_OF_SUBNETWORKS"
+  validation {
+    condition = contains([
+      "ALL_SUBNETWORKS_ALL_IP_RANGES", "ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES", "LIST_OF_SUBNETWORKS"
+    ], var.nat_source_mode)
+    error_message = "nat_source_mode must be one of: ALL_SUBNETWORKS_ALL_IP_RANGES, ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES, LIST_OF_SUBNETWORKS."
+  }
 }
 
 variable "nat_external_ips" {

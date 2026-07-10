@@ -75,7 +75,7 @@ variable "cloud_sql_default" {
       point_in_time_recovery_enabled = false
       transaction_log_retention_days = null
       retained_backups               = null
-      retention_unit                 = null
+      retention_unit                 = "COUNT"
     }
     enable_private_service_access                 = true
     network_link                                  = null
@@ -87,5 +87,38 @@ variable "cloud_sql_default" {
     read_replicas                                 = []
     random_instance_name                          = true
     secret_access_members                         = []
+  }
+
+  validation {
+    condition     = contains(["ZONAL", "REGIONAL"], var.cloud_sql_default.availability_type)
+    error_message = "availability_type must be one of: ZONAL (single zone), REGIONAL (multiple zones)."
+  }
+  validation {
+    condition = contains(
+      ["PD_SSD", "PD_HDD", "HYPERDISK_BALANCED"],
+      var.cloud_sql_default.disk_type
+    )
+    error_message = "disk_type must be one of: PD_SSD, PD_HDD, HYPERDISK_BALANCED."
+  }
+  validation {
+    condition = alltrue([
+      for r in var.cloud_sql_default.read_replicas :
+      contains(["PD_SSD", "PD_HDD", "HYPERDISK_BALANCED"], r.disk_type)
+    ])
+    error_message = "read_replicas[*].disk_type must be one of: PD_SSD, PD_HDD, HYPERDISK_BALANCED."
+  }
+  validation {
+    condition = contains(
+      ["ALLOW_UNENCRYPTED_AND_ENCRYPTED", "ENCRYPTED_ONLY", "TRUSTED_CLIENT_CERTIFICATE_REQUIRED"],
+      var.cloud_sql_default.ssl_mode
+    )
+    error_message = "ssl_mode must be one of: ALLOW_UNENCRYPTED_AND_ENCRYPTED, ENCRYPTED_ONLY, TRUSTED_CLIENT_CERTIFICATE_REQUIRED."
+  }
+  validation {
+    condition = (
+      try(var.cloud_sql_default.backup_configuration.retention_unit, null) == null ||
+      contains(["COUNT"], var.cloud_sql_default.backup_configuration.retention_unit)
+    )
+    error_message = "backup_configuration.retention_unit currently only supports: COUNT."
   }
 }

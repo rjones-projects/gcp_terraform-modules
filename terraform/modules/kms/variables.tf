@@ -115,10 +115,46 @@ variable "keys" {
   validation {
     condition = alltrue([
       for k, v in var.keys : contains([
-        "SOFTWARE", "HSM", "EXTERNAL", "EXTERNAL_VPC"
+        "SOFTWARE", "HSM", "HSM_SINGLE_TENANT", "EXTERNAL", "EXTERNAL_VPC"
       ], try(v.version_template.protection_level, "SOFTWARE"))
     ])
     error_message = "Invalid version template protection level."
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.keys : (
+        try(v.version_template.algorithm, null) == null ||
+        contains([
+          # Symmetric
+          "GOOGLE_SYMMETRIC_ENCRYPTION", "AES_128_GCM", "AES_256_GCM",
+          "AES_128_CBC", "AES_256_CBC", "AES_128_CTR", "AES_256_CTR",
+          "EXTERNAL_SYMMETRIC_ENCRYPTION",
+          # RSA sign - PSS
+          "RSA_SIGN_PSS_2048_SHA256", "RSA_SIGN_PSS_3072_SHA256",
+          "RSA_SIGN_PSS_4096_SHA256", "RSA_SIGN_PSS_4096_SHA512",
+          # RSA sign - PKCS1
+          "RSA_SIGN_PKCS1_2048_SHA256", "RSA_SIGN_PKCS1_3072_SHA256",
+          "RSA_SIGN_PKCS1_4096_SHA256", "RSA_SIGN_PKCS1_4096_SHA512",
+          # RSA sign - raw PKCS1
+          "RSA_SIGN_RAW_PKCS1_2048", "RSA_SIGN_RAW_PKCS1_3072", "RSA_SIGN_RAW_PKCS1_4096",
+          # RSA decrypt - OAEP
+          "RSA_DECRYPT_OAEP_2048_SHA256", "RSA_DECRYPT_OAEP_3072_SHA256",
+          "RSA_DECRYPT_OAEP_4096_SHA256", "RSA_DECRYPT_OAEP_4096_SHA512",
+          "RSA_DECRYPT_OAEP_2048_SHA1", "RSA_DECRYPT_OAEP_3072_SHA1", "RSA_DECRYPT_OAEP_4096_SHA1",
+          # Elliptic curve sign
+          "EC_SIGN_P256_SHA256", "EC_SIGN_P384_SHA384", "EC_SIGN_SECP256K1_SHA256", "EC_SIGN_ED25519",
+          # HMAC
+          "HMAC_SHA1", "HMAC_SHA224", "HMAC_SHA256", "HMAC_SHA384", "HMAC_SHA512",
+          # Key encapsulation
+          "ML_KEM_768", "ML_KEM_1024", "KEM_XWING",
+          # Post-quantum sign
+          "PQ_SIGN_ML_DSA_44", "PQ_SIGN_ML_DSA_65", "PQ_SIGN_ML_DSA_87",
+          "PQ_SIGN_SLH_DSA_SHA2_128S", "PQ_SIGN_HASH_SLH_DSA_SHA2_128S_SHA256",
+          "PQ_SIGN_ML_DSA_44_EXTERNAL_MU", "PQ_SIGN_ML_DSA_65_EXTERNAL_MU", "PQ_SIGN_ML_DSA_87_EXTERNAL_MU",
+        ], v.version_template.algorithm)
+      )
+    ])
+    error_message = "Invalid version_template.algorithm. See https://cloud.google.com/kms/docs/algorithms for the current list (Google adds algorithms over time; update this list if a new one is rejected)."
   }
 }
 

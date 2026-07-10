@@ -91,4 +91,16 @@ variable "bucket_default" {
     iam_bindings_additive       = {}
     objects_to_upload           = {}
   }
+
+  validation {
+    condition = contains(
+      ["STANDARD", "NEARLINE", "COLDLINE", "ARCHIVE", "MULTI_REGIONAL", "REGIONAL"],
+      var.bucket_default.storage_class
+    )
+    error_message = "storage_class must be one of: STANDARD, NEARLINE, COLDLINE, ARCHIVE (MULTI_REGIONAL and REGIONAL are legacy aliases)."
+  }
+  validation {
+    condition     = contains(["enforced", "inherited"], var.bucket_default.public_access_prevention)
+    error_message = "public_access_prevention must be one of: enforced, inherited."
+  }
 }
