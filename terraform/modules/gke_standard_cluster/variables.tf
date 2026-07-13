@@ -106,7 +106,7 @@ variable "gke_standard_cluster_default" {
     block_ssh                            = "true"
     boot_disk_kms_key                    = null
     machine_type                         = "e2-medium"
-    disk_type                            = "pd-standard"
+    disk_type                            = "pd-balanced"
     disk_size_gb                         = 100
     cluster_oauth_scope                  = ["https://www.googleapis.com/auth/cloud-platform"]
     service_account_email                = null
@@ -141,5 +141,43 @@ variable "gke_standard_cluster_default" {
     gpu_count                   = 0
     autoscaling_min_node_count  = 1
     autoscaling_max_node_count  = 3
+  }
+
+  validation {
+    condition     = contains(["RAPID", "REGULAR", "STABLE"], var.gke_standard_cluster_default.release_channel)
+    error_message = "release_channel must be one of: RAPID, REGULAR, STABLE."
+  }
+  validation {
+    condition     = contains(["ADVANCED_DATAPATH", "LEGACY_DATAPATH"], var.gke_standard_cluster_default.datapath_provider)
+    error_message = "datapath_provider must be one of: ADVANCED_DATAPATH (Dataplane V2), LEGACY_DATAPATH."
+  }
+  validation {
+    condition     = contains(["pd-standard", "pd-balanced", "pd-ssd", "hyperdisk-balanced"], var.gke_standard_cluster_default.disk_type)
+    error_message = "disk_type must be one of: pd-standard, pd-balanced, pd-ssd, hyperdisk-balanced."
+  }
+  validation {
+    condition     = contains(["true", "false"], var.gke_standard_cluster_default.block_ssh)
+    error_message = "block_ssh must be either \"true\" or \"false\"."
+  }
+  validation {
+    condition     = contains(["BASIC", "ENTERPRISE", "DISABLED"], var.gke_standard_cluster_default.security_posture_mode)
+    error_message = "security_posture_mode must be one of: BASIC, ENTERPRISE, DISABLED."
+  }
+  validation {
+    condition = contains(
+      ["VULNERABILITY_DISABLED", "VULNERABILITY_BASIC", "VULNERABILITY_ENTERPRISE"],
+      var.gke_standard_cluster_default.security_posture_vulnerability_mode
+    )
+    error_message = "security_posture_vulnerability_mode must be one of: VULNERABILITY_DISABLED, VULNERABILITY_BASIC, VULNERABILITY_ENTERPRISE."
+  }
+  validation {
+    condition = alltrue([
+      for c in var.gke_standard_cluster_default.monitoring_enabled_components : contains([
+        "SYSTEM_COMPONENTS", "APISERVER", "SCHEDULER", "CONTROLLER_MANAGER", "STORAGE",
+        "HPA", "POD", "DAEMONSET", "DEPLOYMENT", "STATEFULSET", "KUBELET", "CADVISOR",
+        "DCGM", "JOBSET"
+      ], c)
+    ])
+    error_message = "monitoring_enabled_components entries must be one of: SYSTEM_COMPONENTS, APISERVER, SCHEDULER, CONTROLLER_MANAGER, STORAGE, HPA, POD, DAEMONSET, DEPLOYMENT, STATEFULSET, KUBELET, CADVISOR, DCGM, JOBSET."
   }
 }

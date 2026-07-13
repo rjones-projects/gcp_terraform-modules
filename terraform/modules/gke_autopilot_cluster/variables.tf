@@ -71,4 +71,30 @@ variable "gke_autopilot_cluster_default" {
     cmek_key_id            = null
     sa_name                = null
   }
+
+  validation {
+    condition     = contains(["RAPID", "REGULAR", "STABLE"], var.gke_autopilot_cluster_default.release_channel)
+    error_message = "release_channel must be one of: RAPID, REGULAR, STABLE."
+  }
+  validation {
+    condition     = contains(["BASIC", "ENTERPRISE", "DISABLED"], var.gke_autopilot_cluster_default.security_posture_mode)
+    error_message = "security_posture_mode must be one of: BASIC, ENTERPRISE, DISABLED."
+  }
+  validation {
+    condition = contains(
+      ["VULNERABILITY_DISABLED", "VULNERABILITY_BASIC", "VULNERABILITY_ENTERPRISE"],
+      var.gke_autopilot_cluster_default.security_posture_vulnerability_mode
+    )
+    error_message = "security_posture_vulnerability_mode must be one of: VULNERABILITY_DISABLED, VULNERABILITY_BASIC, VULNERABILITY_ENTERPRISE."
+  }
+  validation {
+    condition = alltrue([
+      for c in var.gke_autopilot_cluster_default.monitoring_enabled_components : contains([
+        "SYSTEM_COMPONENTS", "APISERVER", "SCHEDULER", "CONTROLLER_MANAGER", "STORAGE",
+        "HPA", "POD", "DAEMONSET", "DEPLOYMENT", "STATEFULSET", "KUBELET", "CADVISOR",
+        "DCGM", "JOBSET"
+      ], c)
+    ])
+    error_message = "monitoring_enabled_components entries must be one of: SYSTEM_COMPONENTS, APISERVER, SCHEDULER, CONTROLLER_MANAGER, STORAGE, HPA, POD, DAEMONSET, DEPLOYMENT, STATEFULSET, KUBELET, CADVISOR, DCGM, JOBSET."
+  }
 }
