@@ -23,7 +23,7 @@ env:
 jobs:
   validate-and-scan:
     name: Quality, Security
-    runs-on: beta-gke-dind-large-runner
+    runs-on: linux
     env:
       TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
     outputs:
@@ -231,7 +231,7 @@ jobs:
   unit-test-modules:
     name: Terraform Unit Tests (${{ matrix.module }})
     needs: validate-and-scan
-    runs-on: beta-gke-dind-large-runner
+    runs-on: linux
     env:
       TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
     strategy:
@@ -307,7 +307,7 @@ jobs:
   test-modules:
     name: Validate & Plan (${{ matrix.module }})
     needs: validate-and-scan
-    runs-on: znl-gke-dind-large-runner
+    runs-on: linux
     env:
       TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
     strategy:
