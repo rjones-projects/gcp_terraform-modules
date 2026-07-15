@@ -1,29 +1,29 @@
 locals {
 
   buckets = [
-    for item in var.gcs.spec : {
-      bucket_name                 = coalesce(item.bucket_name, item.name)
-      location                    = coalesce(item.location, var.region)
-      storage_class               = item.storage_class
-      uniform_bucket_level_access = item.uniform_bucket_level_access
-      kms_key_name                = item.kms_key_name
-      finops_resource_type        = item.finops_resource_type
-      labels                      = item.labels
-      versioning_enabled          = coalesce(item.versioning_enabled, item.versioning, true)
-      accesses = length(item.accesses) > 0 ? item.accesses : [
-        for role, members in item.iam : {
+    for item in try(var.gcs.spec, []) : {
+      bucket_name                 = try(item.bucket_name, item.name)
+      location                    = try(item.location, var.region)
+      storage_class               = try(item.storage_class, var.bucket_default.storage_class)
+      uniform_bucket_level_access = try(item.uniform_bucket_level_access, var.bucket_default.uniform_bucket_level_access)
+      kms_key_name                = try(item.kms_key_name, var.bucket_default.kms_key_name)
+      finops_resource_type        = coalesce(try(item.finops_resource_type, null), "gcs_bucket")
+      labels                      = try(item.labels, {})
+      versioning_enabled          = try(item.versioning_enabled, item.versioning, var.bucket_default.versioning_enabled)
+      accesses = length(try(item.accesses, var.bucket_default.accesses)) > 0 ? item.accesses : [
+        for role, members in try(item.iam, {}) : {
           role    = role
           members = members
         }
       ]
-      retention_policy         = item.retention_policy
-      logging                  = item.logging
-      lifecycle_rules          = item.lifecycle_rules
-      autoclass                = length(item.lifecycle_rules) > 0 ? false : item.autoclass
-      iam_bindings             = item.iam_bindings
-      iam_bindings_additive    = item.iam_bindings_additive
-      objects_to_upload        = item.objects_to_upload
-      public_access_prevention = item.public_access_prevention
+      retention_policy         = try(item.retention_policy, var.bucket_default.retention_policy)
+      logging                  = try(item.logging, var.bucket_default.logging)
+      lifecycle_rules          = try(item.lifecycle_rules, var.bucket_default.lifecycle_rules)
+      autoclass                = length(try(item.lifecycle_rules, [])) > 0 ? false : try(item.autoclass, var.bucket_default.autoclass)
+      iam_bindings             = try(item.iam_bindings, var.bucket_default.iam_bindings)
+      iam_bindings_additive    = try(item.iam_bindings_additive, var.bucket_default.iam_bindings_additive)
+      objects_to_upload        = try(item.objects_to_upload, var.bucket_default.objects_to_upload)
+      public_access_prevention = contains(["enforced", "inherited"], try(item.public_access_prevention, "")) ? item.public_access_prevention : var.bucket_default.public_access_prevention
     }
   ]
 
@@ -95,7 +95,7 @@ locals {
   }
 
 
-  # map of objects to upload and buckets 
+  # map of objects to upload and buckets
   objects_map = flatten([
     for b in local.bucket_map : [
       for object in b.objects_to_upload : [
@@ -110,4 +110,3 @@ locals {
     ]
   ])
 }
-
