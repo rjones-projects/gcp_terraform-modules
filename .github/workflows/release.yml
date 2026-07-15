@@ -13,7 +13,7 @@ jobs:
   release-modules:
     name: Tag and Release
     # Updated to match ci.yml
-    runs-on: beta-gke-dind-large-runner
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout Code
