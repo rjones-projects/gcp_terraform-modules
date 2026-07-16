@@ -13,8 +13,27 @@ variable "project_number" {
 
 variable "iam_service_account" {
   description = "Service account config with items"
-  type        = any
-  default     = null
+  type = object({
+    spec = optional(list(object({
+      project_id                 = optional(string)
+      name                       = optional(string)
+      display_name               = optional(string)
+      description                = optional(string)
+      prefix                     = optional(string)
+      service_account_reuse      = optional(bool)
+      tag_bindings               = optional(map(string))
+      iam_bindings               = optional(map(list(string)))
+      iam_billing_roles          = optional(map(list(string)))
+      iam_by_principles_additive = optional(map(list(string)))
+      iam_by_principles          = optional(map(list(string)))
+      iam_folder_roles           = optional(map(list(string)))
+      iam_organization_roles     = optional(map(list(string)))
+      iam_project_roles          = optional(list(string))
+      iam_sa_roles               = optional(map(list(string)))
+      iam_storage_roles          = optional(map(list(string)))
+    })), [])
+  })
+  default = null
 }
 
 variable "service_account_default" {
