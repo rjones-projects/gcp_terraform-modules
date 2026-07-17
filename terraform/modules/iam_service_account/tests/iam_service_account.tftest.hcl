@@ -21,7 +21,7 @@ variables {
           "roles/composer.worker",
           "roles/iam.serviceAccountTokenCreator"
         ]
-      }
+      },
       {
         name         = "test-composer-reader"
         display_name = "Test Composer Reader Service Account"
