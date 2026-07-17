@@ -22,6 +22,14 @@ variables {
           "roles/iam.serviceAccountTokenCreator"
         ]
       }
+      {
+        name         = "test-composer-reader"
+        display_name = "Test Composer Reader Service Account"
+        iam_project_roles = [
+          "roles/composer.reader",
+          "roles/iam.serviceAccountTokenCreator"
+        ]
+      }      
     ]
   }
 }
