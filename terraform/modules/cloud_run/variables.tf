@@ -226,16 +226,6 @@ variable "name" {
   default     = null
 }
 
-variable "project_id" {
-  description = "Project id used for all resources."
-  type        = string
-}
-
-variable "region" {
-  description = "Region used for all resources."
-  type        = string
-}
-
 variable "revision" {
   description = "Revision template configurations."
   type = object({
