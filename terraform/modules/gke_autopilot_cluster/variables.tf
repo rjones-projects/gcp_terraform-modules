@@ -1,7 +1,4 @@
-variable "project_id" {
-  description = "The project ID"
-  type        = string
-}
+
 
 variable "gke_autopilot_cluster" {
   description = "gke autopilot cluster configurations"

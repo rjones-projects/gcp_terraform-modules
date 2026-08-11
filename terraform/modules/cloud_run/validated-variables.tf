@@ -6,7 +6,7 @@ variable "project_id" {
     error_message = "project_id must be 6-30 characters, start with a lowercase letter, contain only lowercase letters, digits, and hyphens, and cannot end with a hyphen."
   }
 }
-#test
+
 variable "region" {
   description = "Region used for all resources."
   type        = string

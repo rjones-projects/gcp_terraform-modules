@@ -1,7 +1,3 @@
-variable "project_id" {
-  description = "The project ID"
-  type        = string
-}
 
 variable "gke_standard_cluster" {
   description = "gke standard cluster configurations"
